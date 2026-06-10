@@ -40,7 +40,9 @@ function pickVoice(): SpeechSynthesisVoice | null {
     const found = en.find((v) => v.name === saved)
     if (found) return found
   }
-  return en[0]
+  // Default preference: Google US English (Chrome); else best-scored voice.
+  const google = en.find((v) => /google us english/i.test(v.name))
+  return google ?? en[0]
 }
 
 if (typeof speechSynthesis !== 'undefined') {
