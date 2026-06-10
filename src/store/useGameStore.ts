@@ -88,6 +88,7 @@ interface GameState {
   placed: boolean // 是否已做定级扫描
   studyTotalSec: number // 累计学习用时（秒）
   studyByDay: Record<string, number> // 日期 -> 当天用时（秒）
+  lastCheckIn: string | null // 最近一次"打卡领奖"的日期
 
   // selectors
   isLessonUnlocked: (unitId: string, lessonId: string) => boolean
@@ -114,6 +115,8 @@ interface GameState {
   recordAnswer: (ref: SrsRef, correct: boolean) => void
   /** Log time spent in a session (seconds). Capped to ignore idle outliers. */
   logStudyTime: (seconds: number) => void
+  /** Claim today's check-in bonus (only once/day, after the daily goal is met). */
+  claimDaily: () => number
   /** Parent marks a blind-box voucher as physically handed over. */
   redeemVoucher: (lessonId: string) => void
   /** Placement scan result — mark every lesson before `unitId` as cleared. */
@@ -137,6 +140,7 @@ export const useGameStore = create<GameState>()(
       placed: false,
       studyTotalSec: 0,
       studyByDay: {},
+      lastCheckIn: null,
 
       isLessonUnlocked: (unitId, lessonId) => {
         const idx = lessonOrder.findIndex(
@@ -309,6 +313,16 @@ export const useGameStore = create<GameState>()(
         })
       },
 
+      claimDaily: () => {
+        const today = todayStr()
+        if (get().lastPlayed !== today) return 0 // must have studied today
+        if (get().energonToday < get().dailyGoal) return 0 // goal not met yet
+        if (get().lastCheckIn === today) return 0 // already claimed
+        const bonus = 15
+        set({ energon: get().energon + bonus, lastCheckIn: today })
+        return bonus
+      },
+
       redeemVoucher: (lessonId) =>
         set({
           vouchers: get().vouchers.map((v) =>
@@ -346,6 +360,7 @@ export const useGameStore = create<GameState>()(
           placed: false,
           studyTotalSec: 0,
           studyByDay: {},
+          lastCheckIn: null,
         }),
     }),
     { name: 'cybertron-academy-v1' },

@@ -14,6 +14,7 @@ import ResultScreen from './components/ResultScreen'
 import Collection from './components/Collection'
 import TrainingBay from './components/TrainingBay'
 import ParentCenter from './components/ParentCenter'
+import CheckInCard from './components/CheckInCard'
 import PlacementResult from './components/PlacementResult'
 import TabBar, { Tab } from './components/TabBar'
 
@@ -171,8 +172,13 @@ export default function App() {
 
       <main className="flex flex-1 flex-col overflow-hidden pb-20">
         {tab === 'map' && (
-          <div className="flex flex-1 flex-col justify-center">
-            <LevelMap onStart={startLesson} />
+          <div className="flex flex-1 flex-col">
+            <div className="px-4 pt-2">
+              <CheckInCard />
+            </div>
+            <div className="flex flex-1 flex-col justify-center">
+              <LevelMap onStart={startLesson} />
+            </div>
           </div>
         )}
         {tab === 'garage' && <Collection />}
