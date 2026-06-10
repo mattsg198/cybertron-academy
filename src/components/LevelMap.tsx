@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CURRICULUM, lessonOrder, goalOf } from '../data/curriculum'
 import { robotById } from '../data/robots'
@@ -18,14 +18,10 @@ type Stop =
   | { kind: 'exam'; unit: Unit; lesson: Lesson }
   | { kind: 'prize' }
 
-// path geometry
+// path geometry — horizontal is fixed; vertical adapts to viewport height
+// so it also fits phone landscape (short height), not just iPad.
 const SP = 190 // horizontal spacing between stops
-const AMP = 66 // vertical wave amplitude
 const PAD = 140 // left/right padding
-const BASE_Y = 250
-const HEIGHT = 520
-
-const posOf = (i: number) => ({ x: PAD + i * SP, y: BASE_Y + AMP * Math.sin(i * 0.85) })
 
 export default function LevelMap({
   onStart,
@@ -37,6 +33,22 @@ export default function LevelMap({
   const isUnlocked = useGameStore((s) => s.isLessonUnlocked)
   const starsFor = useGameStore((s) => s.starsFor)
   const scroller = useRef<HTMLDivElement>(null)
+
+  // Responsive vertical metrics: shrink the map on short (phone-landscape) screens.
+  const [vh, setVh] = useState(typeof window !== 'undefined' ? window.innerHeight : 820)
+  useEffect(() => {
+    const onResize = () => setVh(window.innerHeight)
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+    }
+  }, [])
+  const HEIGHT = Math.max(330, Math.min(520, vh - 150)) // leave room for TopBar + TabBar
+  const BASE_Y = HEIGHT / 2
+  const AMP = Math.round(HEIGHT * 0.14)
+  const posOf = (i: number) => ({ x: PAD + i * SP, y: BASE_Y + AMP * Math.sin(i * 0.85) })
 
   const stops = useMemo<Stop[]>(() => {
     const out: Stop[] = []
@@ -89,7 +101,8 @@ export default function LevelMap({
     const last = posOf(stops.length - 1)
     d += ` T ${last.x} ${last.y}`
     return d
-  }, [stops])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stops, HEIGHT])
 
   return (
     <div
