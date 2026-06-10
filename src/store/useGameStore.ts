@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SrsRef } from '../types'
 import { CURRICULUM, lessonOrder, unitById } from '../data/curriculum'
+import { SHIELD_COST, SHIELD_MAX } from '../data/shop'
 
 export interface Voucher {
   lessonId: string
@@ -12,6 +13,23 @@ export interface Voucher {
 const todayStr = () => new Date().toISOString().slice(0, 10)
 const dayDiff = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
+
+// Advance the streak for today's first activity. A 连击护盾 covers a missed day
+// so the streak survives instead of resetting (Duolingo-style streak freeze).
+function advanceStreak(
+  last: string | null,
+  today: string,
+  streak: number,
+  shields: number,
+): { streak: number; shields: number } {
+  if (!last) return { streak: 1, shields }
+  if (last === today) return { streak, shields }
+  const gap = dayDiff(last, today)
+  if (gap === 1) return { streak: streak + 1, shields } // consecutive day
+  const missed = gap - 1
+  if (gap > 1 && shields >= missed) return { streak: streak + 1, shields: shields - missed }
+  return { streak: 1, shields } // broke (not enough shields)
+}
 
 // 打卡连续里程碑（奖励为能量，不发盲盒券——盲盒仅由 KET 银牌解锁）
 export interface Milestone {
@@ -127,6 +145,9 @@ interface GameState {
   lastCheckIn: string | null // 最近一次"打卡领奖"的日期
   streakClaimed: number // 本轮连续打卡已领取的最高里程碑天数
   daily: DailyActivity // 今日各类练习计数（每日任务用）
+  shields: number // 连击护盾数量（漏天自动护连击）
+  cosmetics: string[] // 已购皮肤 id
+  activeTheme: string // 当前地图主题 id
 
   // selectors
   isLessonUnlocked: (unitId: string, lessonId: string) => boolean
@@ -161,6 +182,12 @@ interface GameState {
   claimDaily: () => number
   /** Claim a reached streak milestone (3/7/14/30/60 days). Returns it, or null. */
   claimStreakReward: () => Milestone | null
+  /** Buy a 连击护盾 with energon. Returns true on success. */
+  buyShield: () => boolean
+  /** Buy a cosmetic (theme) by id. Returns true on success. */
+  buyCosmetic: (id: string, cost: number) => boolean
+  /** Equip an owned map theme. */
+  equipTheme: (id: string) => void
   /** Parent marks a blind-box voucher as physically handed over. */
   redeemVoucher: (lessonId: string) => void
   /** Placement scan result — mark every lesson before `unitId` as cleared. */
@@ -187,6 +214,9 @@ export const useGameStore = create<GameState>()(
       lastCheckIn: null,
       streakClaimed: 0,
       daily: freshDaily(todayStr()),
+      shields: 0,
+      cosmetics: ['default'],
+      activeTheme: 'default',
 
       isLessonUnlocked: (unitId, lessonId) => {
         const idx = lessonOrder.findIndex(
@@ -217,15 +247,13 @@ export const useGameStore = create<GameState>()(
         // Only award energon for improvement / first clear.
         const award = !prev || stars > prev.stars ? earned : Math.round(earned * 0.3)
 
-        // streak
+        // streak (with 连击护盾 protection)
         const today = todayStr()
         const last = get().lastPlayed
-        let streak = get().streak
+        const adv = advanceStreak(last, today, get().streak, get().shields)
+        const streak = adv.streak
         let energonToday = get().energonToday
-        if (last !== today) {
-          streak = last && dayDiff(last, today) === 1 ? streak + 1 : 1
-          energonToday = 0
-        }
+        if (last !== today) energonToday = 0
 
         const results = {
           ...get().results,
@@ -273,6 +301,7 @@ export const useGameStore = create<GameState>()(
           energon: get().energon + award,
           energonToday: energonToday + award,
           streak,
+          shields: adv.shields,
           lastPlayed: today,
           daily: { ...daily, lessons: daily.lessons + 1 },
           unlockedRobots: newlyUnlocked
@@ -290,12 +319,10 @@ export const useGameStore = create<GameState>()(
 
         const today = todayStr()
         const last = get().lastPlayed
-        let streak = get().streak
+        const adv = advanceStreak(last, today, get().streak, get().shields)
+        const streak = adv.streak
         let energonToday = get().energonToday
-        if (last !== today) {
-          streak = last && dayDiff(last, today) === 1 ? streak + 1 : 1
-          energonToday = 0
-        }
+        if (last !== today) energonToday = 0
 
         const d = rollDaily(get().daily)
         const daily =
@@ -309,6 +336,7 @@ export const useGameStore = create<GameState>()(
           energon: get().energon + earned,
           energonToday: energonToday + earned,
           streak,
+          shields: adv.shields,
           lastPlayed: today,
           daily,
         })
@@ -387,6 +415,22 @@ export const useGameStore = create<GameState>()(
         return m
       },
 
+      buyShield: () => {
+        if (get().energon < SHIELD_COST || get().shields >= SHIELD_MAX) return false
+        set({ energon: get().energon - SHIELD_COST, shields: get().shields + 1 })
+        return true
+      },
+
+      buyCosmetic: (id, cost) => {
+        if (get().cosmetics.includes(id) || get().energon < cost) return false
+        set({ energon: get().energon - cost, cosmetics: [...get().cosmetics, id] })
+        return true
+      },
+
+      equipTheme: (id) => {
+        if (get().cosmetics.includes(id)) set({ activeTheme: id })
+      },
+
       redeemVoucher: (lessonId) =>
         set({
           vouchers: get().vouchers.map((v) =>
@@ -427,6 +471,9 @@ export const useGameStore = create<GameState>()(
           lastCheckIn: null,
           streakClaimed: 0,
           daily: freshDaily(todayStr()),
+          shields: 0,
+          cosmetics: ['default'],
+          activeTheme: 'default',
         }),
     }),
     { name: 'cybertron-academy-v1' },

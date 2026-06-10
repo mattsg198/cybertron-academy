@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Lesson } from './types'
+import { themeById } from './data/shop'
 import type { WordPack } from './data/wordbank'
 import { unitById } from './data/curriculum'
 import { makeVocabLesson } from './lib/generateVocab'
@@ -46,6 +47,10 @@ export default function App() {
   const practiceComplete = useGameStore((s) => s.practiceComplete)
   const placeAt = useGameStore((s) => s.placeAt)
   const { resting, endRest } = useEyeBreak()
+  const activeTheme = useGameStore((s) => s.activeTheme)
+  useEffect(() => {
+    document.body.style.background = themeById(activeTheme).bg
+  }, [activeTheme])
 
   const startPlacement = () => setView({ name: 'placement', lesson: makePlacementLesson() })
 
