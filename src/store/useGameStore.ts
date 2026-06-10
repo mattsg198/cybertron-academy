@@ -47,6 +47,19 @@ interface LessonResult {
   energon: number
 }
 
+// Per-day练习计数（每日任务勾选用）。跨天自动归零。
+export interface DailyActivity {
+  day: string
+  lessons: number // 主线/Boss 关
+  reviews: number // 错题修复 / 复习
+  skill: number // 听力/口语/语法/词汇专项
+}
+const freshDaily = (day: string): DailyActivity => ({ day, lessons: 0, reviews: 0, skill: 0 })
+const rollDaily = (d: DailyActivity | undefined): DailyActivity => {
+  const today = todayStr()
+  return d && d.day === today ? d : freshDaily(today)
+}
+
 // ---- SRS / 错题本 (stored as plain JSON) ----
 export const epochDay = () => Math.floor(Date.now() / 86_400_000)
 const SRS_INTERVALS = [0, 1, 2, 4, 7, 15] // days by strength 0..5
@@ -113,6 +126,7 @@ interface GameState {
   studyByDay: Record<string, number> // 日期 -> 当天用时（秒）
   lastCheckIn: string | null // 最近一次"打卡领奖"的日期
   streakClaimed: number // 本轮连续打卡已领取的最高里程碑天数
+  daily: DailyActivity // 今日各类练习计数（每日任务用）
 
   // selectors
   isLessonUnlocked: (unitId: string, lessonId: string) => boolean
@@ -134,7 +148,11 @@ interface GameState {
     newVoucher: 'silver' | 'gold' | null
   }
   /** Focused-practice session (词汇专项 etc.) — awards energon only, no unlock. */
-  practiceComplete: (correct: number, total: number) => { earned: number; stars: number }
+  practiceComplete: (
+    correct: number,
+    total: number,
+    kind?: 'review' | 'skill',
+  ) => { earned: number; stars: number }
   /** Record one SRS answer (错题本 + 间隔复习 rules). */
   recordAnswer: (ref: SrsRef, correct: boolean) => void
   /** Log time spent in a session (seconds). Capped to ignore idle outliers. */
@@ -168,6 +186,7 @@ export const useGameStore = create<GameState>()(
       studyByDay: {},
       lastCheckIn: null,
       streakClaimed: 0,
+      daily: freshDaily(todayStr()),
 
       isLessonUnlocked: (unitId, lessonId) => {
         const idx = lessonOrder.findIndex(
@@ -246,6 +265,7 @@ export const useGameStore = create<GameState>()(
           }
         }
 
+        const daily = rollDaily(get().daily)
         set({
           results,
           examGrades,
@@ -254,6 +274,7 @@ export const useGameStore = create<GameState>()(
           energonToday: energonToday + award,
           streak,
           lastPlayed: today,
+          daily: { ...daily, lessons: daily.lessons + 1 },
           unlockedRobots: newlyUnlocked
             ? [...get().unlockedRobots, newlyUnlocked]
             : get().unlockedRobots,
@@ -262,7 +283,7 @@ export const useGameStore = create<GameState>()(
         return { earned: award, stars, grade, newlyUnlocked, newVoucher }
       },
 
-      practiceComplete: (correct, total) => {
+      practiceComplete: (correct, total, kind) => {
         const accuracy = total ? correct / total : 0
         const stars = accuracy >= 0.95 ? 3 : accuracy >= 0.75 ? 2 : 1
         const earned = correct * 5 // lighter reward than main lessons
@@ -276,11 +297,20 @@ export const useGameStore = create<GameState>()(
           energonToday = 0
         }
 
+        const d = rollDaily(get().daily)
+        const daily =
+          kind === 'review'
+            ? { ...d, reviews: d.reviews + 1 }
+            : kind === 'skill'
+              ? { ...d, skill: d.skill + 1 }
+              : d
+
         set({
           energon: get().energon + earned,
           energonToday: energonToday + earned,
           streak,
           lastPlayed: today,
+          daily,
         })
         return { earned, stars }
       },
@@ -396,6 +426,7 @@ export const useGameStore = create<GameState>()(
           studyByDay: {},
           lastCheckIn: null,
           streakClaimed: 0,
+          daily: freshDaily(todayStr()),
         }),
     }),
     { name: 'cybertron-academy-v1' },

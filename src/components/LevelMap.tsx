@@ -45,7 +45,7 @@ export default function LevelMap({
       window.removeEventListener('orientationchange', onResize)
     }
   }, [])
-  const HEIGHT = Math.max(320, Math.min(500, vh - 210)) // room for TopBar + check-in card + TabBar
+  const HEIGHT = Math.max(300, Math.min(480, vh - 270)) // room for TopBar + check-in + daily quests + TabBar
   const BASE_Y = HEIGHT / 2
   const AMP = Math.round(HEIGHT * 0.14)
   const posOf = (i: number) => ({ x: PAD + i * SP, y: BASE_Y + AMP * Math.sin(i * 0.85) })

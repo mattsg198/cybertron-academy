@@ -15,6 +15,7 @@ import Collection from './components/Collection'
 import TrainingBay from './components/TrainingBay'
 import ParentCenter from './components/ParentCenter'
 import CheckInCard from './components/CheckInCard'
+import DailyQuests from './components/DailyQuests'
 import EyeBreakOverlay, { useEyeBreak } from './components/EyeBreak'
 import PlacementResult from './components/PlacementResult'
 import TabBar, { Tab } from './components/TabBar'
@@ -89,7 +90,13 @@ export default function App() {
   }
 
   const finishPractice = (correct: number, total: number) => {
-    const res = practiceComplete(correct, total)
+    const id = view.name === 'practice' ? view.lesson.id : ''
+    const kind: 'review' | 'skill' | undefined = id.startsWith('review-')
+      ? 'review'
+      : /^(listen|speak|grammar|vocab)-/.test(id)
+        ? 'skill'
+        : undefined
+    const res = practiceComplete(correct, total, kind)
     setView({
       name: 'result',
       earned: res.earned,
@@ -179,8 +186,13 @@ export default function App() {
       <main className="flex flex-1 flex-col overflow-hidden pb-20">
         {tab === 'map' && (
           <div className="flex flex-1 flex-col">
-            <div className="px-4 pt-2">
+            <div className="space-y-2 px-4 pt-2">
               <CheckInCard />
+              <DailyQuests
+                onStartMain={startLesson}
+                onStartReview={startReview}
+                onStartSkill={startSkill}
+              />
             </div>
             <div className="flex flex-1 flex-col justify-center">
               <LevelMap onStart={startLesson} />
