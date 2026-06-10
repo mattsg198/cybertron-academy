@@ -1,0 +1,403 @@
+import type { Unit } from '../../types'
+
+// SECTOR 2 · Energon Market — food, some/any, how much/many
+// 分场景配比：识词课全 KET 干净风；语法/整合课约半数注入角色（真实食物词照练）。
+export const energonMarket: Unit = {
+  id: 'u2',
+  name: 'Energon Market',
+  zh: '能量市场 · 食物、some/any、数量提问',
+  color: '#00d9ff',
+  rewardRobotId: 'ratchet',
+  lessons: [
+    {
+      id: 'u2l1',
+      title: 'Market Words',
+      emoji: '🍎',
+      tier: 1,
+      skills: ['vocab', 'listen'],
+      topic: 'food',
+      cefr: 'A2',
+      exercises: [
+        {
+          type: 'wordPicture',
+          prompt: 'apple',
+          zh: '苹果',
+          answer: 'apple',
+          options: [
+            { label: 'apple', emoji: '🍎' },
+            { label: 'bread', emoji: '🍞' },
+            { label: 'milk', emoji: '🥛' },
+            { label: 'egg', emoji: '🥚' },
+          ],
+        },
+        {
+          type: 'wordPicture',
+          prompt: 'milk',
+          zh: '牛奶',
+          answer: 'milk',
+          options: [
+            { label: 'milk', emoji: '🥛' },
+            { label: 'water', emoji: '💧' },
+            { label: 'juice', emoji: '🧃' },
+            { label: 'rice', emoji: '🍚' },
+          ],
+        },
+        {
+          type: 'listen',
+          audio: 'bread',
+          question: 'Tap the food you hear.',
+          answer: '🍞',
+          options: ['🍎', '🍞', '🥚', '🍚'],
+        },
+        {
+          type: 'wordPicture',
+          prompt: 'egg',
+          zh: '鸡蛋',
+          answer: 'egg',
+          options: [
+            { label: 'egg', emoji: '🥚' },
+            { label: 'apple', emoji: '🍎' },
+            { label: 'bread', emoji: '🍞' },
+            { label: 'milk', emoji: '🥛' },
+          ],
+        },
+        {
+          type: 'wordPicture',
+          prompt: 'banana',
+          zh: '香蕉',
+          answer: 'banana',
+          options: [
+            { label: 'banana', emoji: '🍌' },
+            { label: 'apple', emoji: '🍎' },
+            { label: 'egg', emoji: '🥚' },
+            { label: 'grapes', emoji: '🍇' },
+          ],
+        },
+        {
+          type: 'listen',
+          audio: 'juice',
+          question: 'Tap the drink you hear.',
+          answer: '🧃',
+          options: ['🥛', '🧃', '💧', '🍵'],
+        },
+        { type: 'spell', word: 'rice', zh: '米饭', emoji: '🍚' },
+        {
+          type: 'wordMatch',
+          zh: '配对：食物词',
+          pairs: [
+            { en: 'apple', cn: '苹果' },
+            { en: 'milk', cn: '牛奶' },
+            { en: 'bread', cn: '面包' },
+            { en: 'egg', cn: '鸡蛋' },
+            { en: 'banana', cn: '香蕉' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'u2l2',
+      title: 'Some & How Many',
+      emoji: '🔢',
+      tier: 2,
+      skills: ['grammar'],
+      topic: 'food',
+      grammar: 'some-any-quantifiers',
+      cefr: 'A2',
+      exercises: [
+        {
+          // KET
+          type: 'fillBlank',
+          before: 'I want ',
+          after: ' water, please.',
+          options: ['some', 'any', 'a'],
+          answer: 'some',
+          zh: '肯定句用 some',
+        },
+        {
+          // 角色 + 真实词
+          type: 'fillBlank',
+          before: 'Bumblebee asks: "Do we have ',
+          after: ' eggs?"',
+          options: ['some', 'any', 'much'],
+          answer: 'any',
+          zh: '疑问句用 any',
+        },
+        {
+          // KET
+          type: 'fillBlank',
+          before: 'How ',
+          after: ' apples do you want?',
+          options: ['much', 'many', 'some'],
+          answer: 'many',
+          zh: '可数名词用 How many',
+        },
+        {
+          // KET
+          type: 'fillBlank',
+          before: 'How ',
+          after: ' milk is there?',
+          options: ['much', 'many', 'any'],
+          answer: 'much',
+          zh: '不可数名词用 How much',
+        },
+        {
+          // 变形金刚点缀（energon = 不可数，本主题仅此 1 处）
+          type: 'fillBlank',
+          before: 'How ',
+          after: ' energon does Optimus need?',
+          options: ['much', 'many', 'some'],
+          answer: 'much',
+          zh: 'energon 不可数，用 How much',
+        },
+        {
+          // 角色 + 真实词（否定句用 any）
+          type: 'fillBlank',
+          before: 'Ratchet says: "There isn’t ',
+          after: ' rice left."',
+          options: ['some', 'any', 'much'],
+          answer: 'any',
+          zh: '否定句用 any',
+        },
+        { type: 'spell', word: 'apple', zh: '苹果', emoji: '🍎' },
+        { type: 'spell', word: 'milk', zh: '牛奶', emoji: '🥛' },
+      ],
+    },
+    {
+      id: 'u2l3',
+      title: 'At the Shop',
+      emoji: '🛒',
+      tier: 3,
+      skills: ['grammar', 'read', 'speak'],
+      topic: 'food',
+      grammar: 'questions',
+      cefr: 'A2',
+      exercises: [
+        {
+          // KET（a/an）
+          type: 'fillBlank',
+          before: 'I would like ',
+          after: ' apple.',
+          options: ['a', 'an', 'some'],
+          answer: 'an',
+          zh: '元音开头用 an：an apple',
+        },
+        {
+          // 变形金刚（iconic 台词，energon 本主题第 2 处）
+          type: 'sentenceBuild',
+          audio: 'Can I have some energon, please?',
+          zh: '我可以要一些能量块吗？',
+          words: ['Can', 'I', 'have', 'some', 'energon', 'please'],
+        },
+        {
+          // KET
+          type: 'sentenceBuild',
+          audio: 'How many bananas do you want?',
+          zh: '你要几根香蕉？',
+          words: ['How', 'many', 'bananas', 'do', 'you', 'want'],
+        },
+        {
+          // 角色 + 真实词
+          type: 'sentenceBuild',
+          audio: 'Ratchet buys some bread.',
+          zh: '救护车买了一些面包。',
+          words: ['Ratchet', 'buys', 'some', 'bread'],
+        },
+        { type: 'speak', prompt: 'I would like an apple, please', zh: '我想要一个苹果，谢谢' },
+        { type: 'speak', prompt: 'Optimus needs some water', zh: '擎天柱需要一些水' },
+        {
+          // 角色 + 真实食物（考点：some/any + 细节理解）
+          type: 'read',
+          passage:
+            'Bumblebee and Ratchet are at the market. Ratchet buys some bread, two eggs and an apple. They do not buy any milk.',
+          question: 'What does Ratchet NOT buy?',
+          answer: 'Milk',
+          options: ['Bread', 'Eggs', 'Milk'],
+        },
+        {
+          // KET
+          type: 'fillBlank',
+          before: 'She buys ',
+          after: ' eggs at the shop.',
+          options: ['some', 'any', 'much'],
+          answer: 'some',
+          zh: '肯定句用 some',
+        },
+      ],
+    },
+    {
+      id: 'u2l4',
+      title: 'At the Cafe',
+      emoji: '☕',
+      tier: 1,
+      skills: ['vocab', 'listen', 'grammar'],
+      topic: 'food',
+      cefr: 'A2',
+      exercises: [
+        {
+          type: 'wordMatch',
+          zh: '配对：饮品',
+          pairs: [
+            { en: 'coffee', cn: '咖啡' },
+            { en: 'tea', cn: '茶' },
+            { en: 'juice', cn: '果汁' },
+            { en: 'water', cn: '水' },
+          ],
+        },
+        {
+          type: 'wordPicture',
+          prompt: 'cake',
+          zh: '蛋糕',
+          answer: 'cake',
+          options: [
+            { label: 'cake', emoji: '🍰' },
+            { label: 'soup', emoji: '🍲' },
+            { label: 'bread', emoji: '🍞' },
+            { label: 'egg', emoji: '🥚' },
+          ],
+        },
+        {
+          type: 'fillBlank',
+          before: 'Can I ',
+          after: ' a glass of milk, please?',
+          options: ['have', 'has', 'having'],
+          answer: 'have',
+          zh: 'Can I have…? 我能要…吗',
+        },
+        {
+          type: 'fillBlank',
+          before: 'I would ',
+          after: ' some juice.',
+          options: ['like', 'likes', 'liking'],
+          answer: 'like',
+          zh: 'would like 想要',
+        },
+        {
+          type: 'listen',
+          audio: 'A cup of tea, please.',
+          question: 'What does she want?',
+          answer: 'Tea',
+          options: ['Tea', 'Coffee', 'Water'],
+        },
+        { type: 'spell', word: 'juice', zh: '果汁', emoji: '🧃' },
+      ],
+    },
+    {
+      id: 'u2l5',
+      title: 'How Much?',
+      emoji: '💰',
+      tier: 2,
+      skills: ['grammar', 'read'],
+      topic: 'food',
+      grammar: 'some-any',
+      cefr: 'A2',
+      exercises: [
+        {
+          type: 'fillBlank',
+          before: 'How ',
+          after: ' is the cake?',
+          options: ['much', 'many', 'old'],
+          answer: 'much',
+          zh: '问价格 How much',
+        },
+        {
+          type: 'fillBlank',
+          before: 'How ',
+          after: ' eggs are there?',
+          options: ['much', 'many', 'some'],
+          answer: 'many',
+          zh: '可数名词用 many',
+        },
+        {
+          type: 'fillBlank',
+          before: 'There isn’t ',
+          after: ' sugar.',
+          options: ['some', 'any', 'many'],
+          answer: 'any',
+          zh: '否定句用 any',
+        },
+        {
+          type: 'sentenceBuild',
+          audio: 'How much is the juice?',
+          zh: '果汁多少钱？',
+          words: ['How', 'much', 'is', 'the', 'juice'],
+        },
+        {
+          type: 'read',
+          passage:
+            'At the cafe, a cake is three dollars and a juice is two dollars. Bumblebee has five dollars. He buys one cake and one juice.',
+          question: 'How much does Bumblebee spend?',
+          answer: 'Five dollars',
+          options: ['Three dollars', 'Five dollars', 'Two dollars'],
+        },
+      ],
+    },
+    {
+      // 小关底 Boss：红蜘蛛 Starscream — 综合复习 some/any + how much/many
+      id: 'u2l6',
+      title: 'Sector Boss: Starscream',
+      emoji: '✈️',
+      tier: 3,
+      skills: ['grammar', 'listen', 'read'],
+      topic: 'food',
+      grammar: 'some-any',
+      cefr: 'A2',
+      boss: {
+        name: 'Starscream',
+        emoji: '✈️',
+        zh: '红蜘蛛',
+        intro: '红蜘蛛趁夜偷袭能量集市，卷走了一大批能量块！他狂妄地说只有词汇和语法都过硬的人才配拿回它们。用 some/any 和 how much/many 把货物清点清楚，逼他交出赃物！',
+      },
+      exercises: [
+        {
+          type: 'fillBlank',
+          before: 'There is ',
+          after: ' milk in the cup.',
+          options: ['some', 'any', 'many'],
+          answer: 'some',
+          zh: '肯定句 some',
+        },
+        {
+          type: 'fillBlank',
+          before: 'How ',
+          after: ' apples do you want?',
+          options: ['much', 'many', 'some'],
+          answer: 'many',
+          zh: '可数名词用 many',
+        },
+        {
+          type: 'fillBlank',
+          before: 'We don’t have ',
+          after: ' bread.',
+          options: ['some', 'any', 'a'],
+          answer: 'any',
+          zh: '否定句用 any',
+        },
+        {
+          type: 'wordMatch',
+          zh: '配对：食物',
+          pairs: [
+            { en: 'rice', cn: '米饭' },
+            { en: 'fish', cn: '鱼' },
+            { en: 'cheese', cn: '奶酪' },
+            { en: 'soup', cn: '汤' },
+          ],
+        },
+        {
+          type: 'listen',
+          audio: 'How much water is there?',
+          question: 'What is the question about?',
+          answer: 'Water',
+          options: ['Water', 'Apples', 'Eggs'],
+        },
+        {
+          type: 'read',
+          passage:
+            'Starscream is hungry. There are some eggs and a lot of fish, but there isn’t any cake. He eats two eggs.',
+          question: 'What isn’t there?',
+          answer: 'Cake',
+          options: ['Eggs', 'Fish', 'Cake'],
+        },
+      ],
+    },
+  ],
+}

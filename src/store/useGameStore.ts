@@ -1,0 +1,355 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import type { SrsRef } from '../types'
+import { CURRICULUM, lessonOrder, unitById } from '../data/curriculum'
+
+export interface Voucher {
+  lessonId: string
+  tier: 'silver' | 'gold'
+  redeemed?: boolean // 家长已发放实体盲盒
+}
+
+const todayStr = () => new Date().toISOString().slice(0, 10)
+const dayDiff = (a: string, b: string) =>
+  Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
+
+// KET 模考分数分阶段：金 ≥95% · 银 ≥80% · 铜 ≥60% · 不及格 <60%
+export type GradeTier = 'fail' | 'bronze' | 'silver' | 'gold'
+export const gradeOf = (acc: number): GradeTier =>
+  acc >= 0.95 ? 'gold' : acc >= 0.8 ? 'silver' : acc >= 0.6 ? 'bronze' : 'fail'
+const gradeRank: Record<GradeTier, number> = { fail: 0, bronze: 1, silver: 2, gold: 3 }
+
+interface LessonResult {
+  stars: number // 0–3 based on accuracy
+  energon: number
+}
+
+// ---- SRS / 错题本 (stored as plain JSON) ----
+export const epochDay = () => Math.floor(Date.now() / 86_400_000)
+const SRS_INTERVALS = [0, 1, 2, 4, 7, 15] // days by strength 0..5
+
+export interface SrsCard {
+  ref: string
+  kind: 'word' | 'item'
+  topic?: string
+  wrongStreak: number
+  collected: boolean // in 错题本 (连错3)
+  fixedStreak: number // 修复站连对
+  strength: number // 0..5
+  dueDay: number
+  seen: number
+  correct: number
+}
+
+export interface SrsStats {
+  collected: number
+  due: number
+  learning: number
+  mastered: number
+  total: number
+}
+
+export function srsStats(srs: Record<string, SrsCard>): SrsStats {
+  const today = epochDay()
+  const cards = Object.values(srs)
+  return {
+    collected: cards.filter((c) => c.collected).length,
+    due: cards.filter((c) => c.dueDay <= today).length,
+    learning: cards.filter((c) => c.strength > 0 && c.strength < 5).length,
+    mastered: cards.filter((c) => c.strength >= 5).length,
+    total: cards.length,
+  }
+}
+
+/** Cards to review now: collected (顽固) first, then earliest due. */
+export function dueCards(
+  srs: Record<string, SrsCard>,
+  limit = 20,
+): (SrsCard & { id: string })[] {
+  const today = epochDay()
+  return Object.entries(srs)
+    .map(([id, c]) => ({ id, ...c }))
+    .filter((c) => c.collected || c.dueDay <= today)
+    .sort((a, b) => Number(b.collected) - Number(a.collected) || a.dueDay - b.dueDay)
+    .slice(0, limit)
+}
+
+interface GameState {
+  energon: number
+  streak: number
+  lastPlayed: string | null
+  results: Record<string, LessonResult> // lessonId -> result
+  examGrades: Record<string, GradeTier> // exam lessonId -> best grade
+  vouchers: Voucher[] // 盲盒券（银+解锁）
+  srs: Record<string, SrsCard> // 词/考点掌握度 + 错题本
+  unlockedRobots: string[]
+  dailyGoal: number
+  energonToday: number
+  placed: boolean // 是否已做定级扫描
+  studyTotalSec: number // 累计学习用时（秒）
+  studyByDay: Record<string, number> // 日期 -> 当天用时（秒）
+
+  // selectors
+  isLessonUnlocked: (unitId: string, lessonId: string) => boolean
+  isUnitComplete: (unitId: string) => boolean
+  starsFor: (lessonId: string) => number
+
+  // actions
+  completeLesson: (
+    unitId: string,
+    lessonId: string,
+    correct: number,
+    total: number,
+    isExam?: boolean,
+  ) => {
+    earned: number
+    stars: number
+    grade: GradeTier
+    newlyUnlocked: string | null
+    newVoucher: 'silver' | 'gold' | null
+  }
+  /** Focused-practice session (词汇专项 etc.) — awards energon only, no unlock. */
+  practiceComplete: (correct: number, total: number) => { earned: number; stars: number }
+  /** Record one SRS answer (错题本 + 间隔复习 rules). */
+  recordAnswer: (ref: SrsRef, correct: boolean) => void
+  /** Log time spent in a session (seconds). Capped to ignore idle outliers. */
+  logStudyTime: (seconds: number) => void
+  /** Parent marks a blind-box voucher as physically handed over. */
+  redeemVoucher: (lessonId: string) => void
+  /** Placement scan result — mark every lesson before `unitId` as cleared. */
+  placeAt: (unitId: string) => void
+  reset: () => void
+}
+
+export const useGameStore = create<GameState>()(
+  persist(
+    (set, get) => ({
+      energon: 0,
+      streak: 0,
+      lastPlayed: null,
+      results: {},
+      examGrades: {},
+      vouchers: [],
+      srs: {},
+      unlockedRobots: ['tr3'], // start with your buddy
+      dailyGoal: 30,
+      energonToday: 0,
+      placed: false,
+      studyTotalSec: 0,
+      studyByDay: {},
+
+      isLessonUnlocked: (unitId, lessonId) => {
+        const idx = lessonOrder.findIndex(
+          (o) => o.unitId === unitId && o.lessonId === lessonId,
+        )
+        if (idx <= 0) return true // first lesson always open
+        const prev = lessonOrder[idx - 1]
+        return !!get().results[prev.lessonId]
+      },
+
+      isUnitComplete: (unitId) => {
+        const u = unitById(unitId)
+        if (!u) return false
+        return u.lessons.every((l) => !!get().results[l.id])
+      },
+
+      starsFor: (lessonId) => get().results[lessonId]?.stars ?? 0,
+
+      completeLesson: (unitId, lessonId, correct, total, isExam = false) => {
+        const accuracy = total ? correct / total : 0
+        const stars = accuracy >= 0.95 ? 3 : accuracy >= 0.75 ? 2 : 1
+        const grade = gradeOf(accuracy)
+        const base = correct * 10
+        const bonus = stars === 3 ? 20 : stars === 2 ? 10 : 0
+        const earned = base + bonus
+
+        const prev = get().results[lessonId]
+        // Only award energon for improvement / first clear.
+        const award = !prev || stars > prev.stars ? earned : Math.round(earned * 0.3)
+
+        // streak
+        const today = todayStr()
+        const last = get().lastPlayed
+        let streak = get().streak
+        let energonToday = get().energonToday
+        if (last !== today) {
+          streak = last && dayDiff(last, today) === 1 ? streak + 1 : 1
+          energonToday = 0
+        }
+
+        const results = {
+          ...get().results,
+          [lessonId]: {
+            stars: Math.max(stars, prev?.stars ?? 0),
+            energon: (prev?.energon ?? 0) + award,
+          },
+        }
+
+        // exam: record best grade
+        let examGrades = get().examGrades
+        if (isExam && gradeRank[grade] > gradeRank[examGrades[lessonId] ?? 'fail']) {
+          examGrades = { ...examGrades, [lessonId]: grade }
+        }
+
+        // staged blind-box voucher (silver+; upgrade to gold)
+        let vouchers = get().vouchers
+        let newVoucher: 'silver' | 'gold' | null = null
+        if (isExam && (grade === 'silver' || grade === 'gold')) {
+          const existing = vouchers.find((v) => v.lessonId === lessonId)
+          if (!existing) {
+            vouchers = [...vouchers, { lessonId, tier: grade }]
+            newVoucher = grade
+          } else if (grade === 'gold' && existing.tier !== 'gold') {
+            vouchers = vouchers.map((v) => (v.lessonId === lessonId ? { ...v, tier: 'gold' } : v))
+            newVoucher = 'gold'
+          }
+        }
+
+        // robot unlock on unit completion (exam must reach bronze+ to count as passed)
+        let newlyUnlocked: string | null = null
+        const passed = !isExam || grade !== 'fail'
+        const u = unitById(unitId)
+        if (u && passed && u.lessons.every((l) => !!results[l.id])) {
+          if (!get().unlockedRobots.includes(u.rewardRobotId)) {
+            newlyUnlocked = u.rewardRobotId
+          }
+        }
+
+        set({
+          results,
+          examGrades,
+          vouchers,
+          energon: get().energon + award,
+          energonToday: energonToday + award,
+          streak,
+          lastPlayed: today,
+          unlockedRobots: newlyUnlocked
+            ? [...get().unlockedRobots, newlyUnlocked]
+            : get().unlockedRobots,
+        })
+
+        return { earned: award, stars, grade, newlyUnlocked, newVoucher }
+      },
+
+      practiceComplete: (correct, total) => {
+        const accuracy = total ? correct / total : 0
+        const stars = accuracy >= 0.95 ? 3 : accuracy >= 0.75 ? 2 : 1
+        const earned = correct * 5 // lighter reward than main lessons
+
+        const today = todayStr()
+        const last = get().lastPlayed
+        let streak = get().streak
+        let energonToday = get().energonToday
+        if (last !== today) {
+          streak = last && dayDiff(last, today) === 1 ? streak + 1 : 1
+          energonToday = 0
+        }
+
+        set({
+          energon: get().energon + earned,
+          energonToday: energonToday + earned,
+          streak,
+          lastPlayed: today,
+        })
+        return { earned, stars }
+      },
+
+      recordAnswer: (ref, correct) => {
+        const today = epochDay()
+        const prev = get().srs[ref.id]
+        let wrongStreak = prev?.wrongStreak ?? 0
+        let collected = prev?.collected ?? false
+        let fixedStreak = prev?.fixedStreak ?? 0
+        let strength = prev?.strength ?? 0
+
+        if (correct) {
+          wrongStreak = 0
+          strength = Math.min(strength + 1, 5)
+          if (collected) {
+            fixedStreak += 1
+            if (fixedStreak >= 2) {
+              collected = false // 毕业出错题本
+              fixedStreak = 0
+            }
+          }
+        } else {
+          wrongStreak += 1
+          fixedStreak = 0
+          strength = 0
+          if (wrongStreak >= 3) collected = true // 连错 3 次入册
+        }
+        const dueDay = correct ? today + SRS_INTERVALS[strength] : today + 1
+
+        set({
+          srs: {
+            ...get().srs,
+            [ref.id]: {
+              ref: ref.ref,
+              kind: ref.kind,
+              topic: ref.topic,
+              wrongStreak,
+              collected,
+              fixedStreak,
+              strength,
+              dueDay,
+              seen: (prev?.seen ?? 0) + 1,
+              correct: (prev?.correct ?? 0) + (correct ? 1 : 0),
+            },
+          },
+        })
+      },
+
+      logStudyTime: (seconds) => {
+        const sec = Math.min(Math.max(0, Math.round(seconds)), 1800) // cap 30min/session
+        if (sec < 2) return // ignore accidental opens
+        const today = todayStr()
+        set({
+          studyTotalSec: get().studyTotalSec + sec,
+          studyByDay: { ...get().studyByDay, [today]: (get().studyByDay[today] ?? 0) + sec },
+        })
+      },
+
+      redeemVoucher: (lessonId) =>
+        set({
+          vouchers: get().vouchers.map((v) =>
+            v.lessonId === lessonId ? { ...v, redeemed: true } : v,
+          ),
+        }),
+
+      placeAt: (unitId) => {
+        const idx = CURRICULUM.findIndex((u) => u.id === unitId)
+        if (idx < 0) {
+          set({ placed: true })
+          return
+        }
+        const results = { ...get().results }
+        // mark every lesson in the sectors BEFORE the target as cleared (2★)
+        for (let i = 0; i < idx; i++) {
+          for (const l of CURRICULUM[i].lessons) {
+            if (!results[l.id]) results[l.id] = { stars: 2, energon: 0 }
+          }
+        }
+        set({ results, placed: true })
+      },
+
+      reset: () =>
+        set({
+          energon: 0,
+          streak: 0,
+          lastPlayed: null,
+          results: {},
+          examGrades: {},
+          vouchers: [],
+          srs: {},
+          unlockedRobots: ['tr3'],
+          energonToday: 0,
+          placed: false,
+          studyTotalSec: 0,
+          studyByDay: {},
+        }),
+    }),
+    { name: 'cybertron-academy-v1' },
+  ),
+)
+
+export const totalLessons = CURRICULUM.reduce((n, u) => n + u.lessons.length, 0)

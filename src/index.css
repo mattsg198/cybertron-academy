@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+
+:root {
+  font-family: 'Baloo 2', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@theme {
+  --color-cyber: #00d9ff;
+  --color-energon: #ffd34e;
+  --color-autobot: #d6263a;
+  --color-spark: #ff7a18;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #1b2b6b 0%, transparent 60%),
+    linear-gradient(160deg, #0a0f2c 0%, #131a3a 50%, #0a0f2c 100%);
+  color: #eaf2ff;
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* hide scrollbars but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+button { font-family: inherit; cursor: pointer; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 217, 255, 0.5); }
+  50% { box-shadow: 0 0 24px 6px rgba(0, 217, 255, 0.35); }
+}
+.animate-glow { animation: pulse-glow 2s ease-in-out infinite; }
