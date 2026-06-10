@@ -14,6 +14,7 @@ import ReadComprehend from './exercises/ReadComprehend'
 import WordMatch from './exercises/WordMatch'
 import { ExProps } from './exercises/shared'
 import RobotAvatar from './RobotAvatar'
+import AssetImage from './AssetImage'
 import { robotById } from '../data/robots'
 
 const INSPECTOR = robotById('tr3')
@@ -114,7 +115,7 @@ export default function LessonScreen({
   if (showIntro && boss?.intro) {
     return (
       <div className="mx-auto flex h-dvh max-w-2xl flex-col items-center justify-center gap-5 px-8 text-center">
-        <div className="text-7xl">{boss.emoji}</div>
+        <AssetImage slot={boss.image} emoji={boss.emoji} sizeClass="text-7xl" />
         <h1 className="text-3xl font-black text-[#ff6b88]">
           ⚔️ 关底 Boss · {boss.zh ?? boss.name}
         </h1>
@@ -198,7 +199,7 @@ export default function LessonScreen({
             transition={{ duration: 0.4 }}
             className="text-5xl"
           >
-            {bossHp <= 0 ? '💥' : boss.emoji}
+            {bossHp <= 0 ? '💥' : <AssetImage slot={boss.image} emoji={boss.emoji} sizeClass="text-5xl" />}
           </motion.div>
           <div className="flex-1">
             <div className="flex items-center justify-between">

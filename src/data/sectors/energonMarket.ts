@@ -345,6 +345,7 @@ export const energonMarket: Unit = {
         name: 'Starscream',
         emoji: '✈️',
         zh: '红蜘蛛',
+        image: 'bosses/starscream.png',
         intro: '红蜘蛛趁夜偷袭能量集市，卷走了一大批能量块！他狂妄地说只有词汇和语法都过硬的人才配拿回它们。用 some/any 和 how much/many 把货物清点清楚，逼他交出赃物！',
       },
       exercises: [

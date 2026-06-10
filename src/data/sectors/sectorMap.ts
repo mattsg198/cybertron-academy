@@ -329,6 +329,7 @@ export const sectorMap: Unit = {
         name: 'Shockwave',
         emoji: '👁️',
         zh: '震荡波',
+        image: 'bosses/shockwave.png',
         intro: '震荡波在城区布下了一座迷宫，所有路牌都被他打乱了！跟着 there is/are 和左转右转的方位线索，一步步找出他隐藏的秘密基地。别迷路，探长！',
       },
       exercises: [

@@ -271,6 +271,7 @@ export const dailyDrive: Unit = {
         name: 'Soundwave',
         emoji: '🎧',
         zh: '声波',
+        image: 'bosses/soundwave.png',
         intro: '声波潜入了汽车人基地，劫持了通讯频率，监听大家的一举一动！只有用流利的英语回答他的盘问，才能干扰他的信号、把频率夺回来。准备好了吗，探长？',
       },
       exercises: [

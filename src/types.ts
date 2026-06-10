@@ -98,6 +98,8 @@ export interface BossInfo {
   zh?: string
   /** Short story shown on a pre-battle intro screen. */
   intro?: string
+  /** Asset slot under public/ (e.g. 'bosses/soundwave.png'); falls back to emoji. */
+  image?: string
 }
 
 export interface Lesson {

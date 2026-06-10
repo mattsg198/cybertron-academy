@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Robot } from '../types'
+import { assetUrl } from '../data/assets'
 
 // Module-level cache of asset paths that 404'd, so we don't retry every render.
 const missing = new Set<string>()
@@ -20,7 +21,7 @@ export default function RobotAvatar({
   className?: string
   sizeClass?: string
 }) {
-  const src = robot.image ?? `/robots/${robot.id}.png`
+  const src = assetUrl(robot.image ?? `robots/${robot.id}.png`)
   const [failed, setFailed] = useState(missing.has(src))
 
   if (failed) {

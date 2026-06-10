@@ -122,7 +122,9 @@ export default function App() {
   if (view.name === 'lesson') {
     const unit = unitById(view.unitId)
     const boss =
-      unit?.kind === 'exam' ? { name: unit.name, emoji: '👾' } : view.lesson.boss
+      unit?.kind === 'exam'
+        ? { name: unit.name, emoji: '👾', image: 'bosses/megatron.png' }
+        : view.lesson.boss
     return (
       <LessonScreen
         lesson={view.lesson}

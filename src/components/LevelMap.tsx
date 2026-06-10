@@ -4,6 +4,7 @@ import { CURRICULUM, lessonOrder, goalOf } from '../data/curriculum'
 import { robotById } from '../data/robots'
 import { useGameStore } from '../store/useGameStore'
 import RobotAvatar from './RobotAvatar'
+import AssetImage from './AssetImage'
 import type { Lesson, Unit } from '../types'
 
 // ============================================================
@@ -249,7 +250,13 @@ function LessonStop({
             : undefined
         }
       >
-        {unlocked ? lesson.emoji : '🔒'}
+        {!unlocked ? (
+          '🔒'
+        ) : isBoss ? (
+          <AssetImage slot={lesson.boss!.image} emoji={lesson.emoji} sizeClass="text-4xl" />
+        ) : (
+          lesson.emoji
+        )}
       </button>
       {isBoss && unlocked && (
         <div className="mt-1 text-base font-black text-[#ff8fa3]">{lesson.boss!.name}</div>

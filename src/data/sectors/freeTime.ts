@@ -326,6 +326,7 @@ export const freeTime: Unit = {
         name: 'Skywarp',
         emoji: '🌀',
         zh: '天猫',
+        image: 'bosses/skywarp.png',
         intro: '天猫会瞬间移动，突然杀进了汽车人的训练场！想锁定他的位置，就得用现在进行时说清楚"谁正在做什么"。眼疾手快，跟上他的速度！',
       },
       exercises: [
