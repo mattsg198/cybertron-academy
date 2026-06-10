@@ -13,6 +13,29 @@ const todayStr = () => new Date().toISOString().slice(0, 10)
 const dayDiff = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
 
+// 打卡连续里程碑（奖励为能量，不发盲盒券——盲盒仅由 KET 银牌解锁）
+export interface Milestone {
+  days: number
+  bonus: number
+  label: string
+  emoji: string
+}
+export const STREAK_MILESTONES: Milestone[] = [
+  { days: 3, bonus: 30, label: '坚持 3 天', emoji: '🔥' },
+  { days: 7, bonus: 80, label: '坚持 1 周', emoji: '⭐' },
+  { days: 14, bonus: 150, label: '坚持 2 周', emoji: '🚀' },
+  { days: 30, bonus: 400, label: '坚持 1 个月', emoji: '🏆' },
+  { days: 60, bonus: 800, label: '坚持 2 个月', emoji: '👑' },
+]
+/** The milestone the child can claim now (reached but not yet claimed in this run). */
+export function claimableMilestone(streak: number, streakClaimed: number): Milestone | null {
+  const claimed = streakClaimed <= streak ? streakClaimed : 0 // streak broke → re-earnable
+  return STREAK_MILESTONES.find((m) => m.days <= streak && m.days > claimed) ?? null
+}
+/** The next milestone still ahead (for a progress hint). */
+export const nextMilestone = (streak: number): Milestone | null =>
+  STREAK_MILESTONES.find((m) => m.days > streak) ?? null
+
 // KET 模考分数分阶段：金 ≥95% · 银 ≥80% · 铜 ≥60% · 不及格 <60%
 export type GradeTier = 'fail' | 'bronze' | 'silver' | 'gold'
 export const gradeOf = (acc: number): GradeTier =>
@@ -89,6 +112,7 @@ interface GameState {
   studyTotalSec: number // 累计学习用时（秒）
   studyByDay: Record<string, number> // 日期 -> 当天用时（秒）
   lastCheckIn: string | null // 最近一次"打卡领奖"的日期
+  streakClaimed: number // 本轮连续打卡已领取的最高里程碑天数
 
   // selectors
   isLessonUnlocked: (unitId: string, lessonId: string) => boolean
@@ -117,6 +141,8 @@ interface GameState {
   logStudyTime: (seconds: number) => void
   /** Claim today's check-in bonus (only once/day, after the daily goal is met). */
   claimDaily: () => number
+  /** Claim a reached streak milestone (3/7/14/30/60 days). Returns it, or null. */
+  claimStreakReward: () => Milestone | null
   /** Parent marks a blind-box voucher as physically handed over. */
   redeemVoucher: (lessonId: string) => void
   /** Placement scan result — mark every lesson before `unitId` as cleared. */
@@ -141,6 +167,7 @@ export const useGameStore = create<GameState>()(
       studyTotalSec: 0,
       studyByDay: {},
       lastCheckIn: null,
+      streakClaimed: 0,
 
       isLessonUnlocked: (unitId, lessonId) => {
         const idx = lessonOrder.findIndex(
@@ -323,6 +350,13 @@ export const useGameStore = create<GameState>()(
         return bonus
       },
 
+      claimStreakReward: () => {
+        const m = claimableMilestone(get().streak, get().streakClaimed)
+        if (!m) return null
+        set({ energon: get().energon + m.bonus, streakClaimed: m.days })
+        return m
+      },
+
       redeemVoucher: (lessonId) =>
         set({
           vouchers: get().vouchers.map((v) =>
@@ -361,6 +395,7 @@ export const useGameStore = create<GameState>()(
           studyTotalSec: 0,
           studyByDay: {},
           lastCheckIn: null,
+          streakClaimed: 0,
         }),
     }),
     { name: 'cybertron-academy-v1' },
