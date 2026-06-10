@@ -51,11 +51,13 @@ const NUDGES = ['探长：再想想，你能行 💡', '差一点，换条线索
 export default function LessonScreen({
   lesson,
   boss,
+  paused = false,
   onFinish,
   onQuit,
 }: {
   lesson: Lesson
   boss?: BossInfo
+  paused?: boolean
   onFinish: (correct: number, total: number) => void
   onQuit: () => void
 }) {
@@ -162,7 +164,7 @@ export default function LessonScreen({
     if (boss) setTimeLeft(BOSS_TIME)
   }, [idx, boss])
   useEffect(() => {
-    if (!boss || answered || showIntro) return
+    if (!boss || answered || showIntro || paused) return
     if (timeLeft <= 0) {
       setTimedOut(true)
       handleDone(false)
@@ -171,7 +173,7 @@ export default function LessonScreen({
     const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boss, answered, timeLeft, showIntro])
+  }, [boss, answered, timeLeft, showIntro, paused])
 
   const next = () => {
     setAnswered(false)

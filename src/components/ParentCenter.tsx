@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CURRICULUM, lessonByIds } from '../data/curriculum'
 import { englishVoices, currentVoiceName, setVoice, speak } from '../lib/speech'
-import { useGameStore, srsStats, totalLessons, type GradeTier } from '../store/useGameStore'
+import {
+  useGameStore,
+  srsStats,
+  totalLessons,
+  STREAK_MILESTONES,
+  type GradeTier,
+} from '../store/useGameStore'
 
 const MEDAL: Record<GradeTier, string> = { gold: '🥇', silver: '🥈', bronze: '🥉', fail: '💢' }
 
@@ -13,6 +19,7 @@ export default function ParentCenter({ onStartPlacement }: { onStartPlacement: (
   const streak = useGameStore((s) => s.streak)
   const studyTotalSec = useGameStore((s) => s.studyTotalSec)
   const studyByDay = useGameStore((s) => s.studyByDay)
+  const lastCheckIn = useGameStore((s) => s.lastCheckIn)
   const unlockedRobots = useGameStore((s) => s.unlockedRobots)
   const redeemVoucher = useGameStore((s) => s.redeemVoucher)
   const reset = useGameStore((s) => s.reset)
@@ -126,6 +133,46 @@ export default function ParentCenter({ onStartPlacement }: { onStartPlacement: (
                 <div className="text-[9px] text-white/45">{d.day}</div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* daily check-in & streak milestones */}
+        <h2 className="mb-2 text-lg font-black">🔥 打卡与坚持</h2>
+        <div className="mb-5 rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+          <div className="mb-3 flex items-center gap-6">
+            <div>
+              <div className="text-2xl font-black text-energon">🔥 {streak} 天</div>
+              <div className="text-xs text-white/55">当前连续打卡</div>
+            </div>
+            <div>
+              <div className="text-sm font-black">
+                {lastCheckIn === todayKey ? (
+                  <span className="text-emerald-300">✅ 今日已打卡</span>
+                ) : (
+                  <span className="text-white/60">今日未打卡</span>
+                )}
+              </div>
+              <div className="text-xs text-white/45">达成每日目标即可打卡领能量</div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {STREAK_MILESTONES.map((m) => {
+              const done = streak >= m.days
+              return (
+                <div
+                  key={m.days}
+                  className={`rounded-xl border px-3 py-1.5 text-center text-xs ${
+                    done
+                      ? 'border-energon/50 bg-energon/10 text-energon'
+                      : 'border-white/10 bg-white/[0.03] text-white/45'
+                  }`}
+                  title={`${m.label} → +${m.bonus} 能量`}
+                >
+                  <span className="font-black">{done ? '✓' : m.emoji} {m.days}天</span>
+                  <span className="ml-1 opacity-70">+{m.bonus}⚡</span>
+                </div>
+              )
+            })}
           </div>
         </div>
 

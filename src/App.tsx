@@ -15,6 +15,7 @@ import Collection from './components/Collection'
 import TrainingBay from './components/TrainingBay'
 import ParentCenter from './components/ParentCenter'
 import CheckInCard from './components/CheckInCard'
+import EyeBreakOverlay, { useEyeBreak } from './components/EyeBreak'
 import PlacementResult from './components/PlacementResult'
 import TabBar, { Tab } from './components/TabBar'
 
@@ -43,6 +44,7 @@ export default function App() {
   const completeLesson = useGameStore((s) => s.completeLesson)
   const practiceComplete = useGameStore((s) => s.practiceComplete)
   const placeAt = useGameStore((s) => s.placeAt)
+  const { resting, endRest } = useEyeBreak()
 
   const startPlacement = () => setView({ name: 'placement', lesson: makePlacementLesson() })
 
@@ -103,6 +105,7 @@ export default function App() {
   }
 
   // Full-screen flows take over entirely.
+  const content = (() => {
   if (view.name === 'lesson') {
     const unit = unitById(view.unitId)
     const boss =
@@ -111,6 +114,7 @@ export default function App() {
       <LessonScreen
         lesson={view.lesson}
         boss={boss}
+        paused={resting}
         onFinish={finishLesson}
         onQuit={() => setView({ name: 'home' })}
       />
@@ -120,6 +124,7 @@ export default function App() {
     return (
       <LessonScreen
         lesson={view.lesson}
+        paused={resting}
         onFinish={finishPractice}
         onQuit={() => setView({ name: 'home' })}
       />
@@ -129,6 +134,7 @@ export default function App() {
     return (
       <LessonScreen
         lesson={view.lesson}
+        paused={resting}
         onFinish={finishPlacement}
         onQuit={() => setView({ name: 'home' })}
       />
@@ -194,5 +200,13 @@ export default function App() {
 
       <TabBar active={tab} onChange={setTab} />
     </div>
+  )
+  })()
+
+  return (
+    <>
+      {content}
+      {resting && <EyeBreakOverlay onDone={endRest} />}
+    </>
   )
 }
