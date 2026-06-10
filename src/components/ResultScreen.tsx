@@ -37,6 +37,13 @@ export default function ResultScreen({
   const robot = newlyUnlocked ? robotById(newlyUnlocked) : null
   const pct = total ? Math.round((correct / total) * 100) : 0
   const g = GRADE[grade]
+  const lessonCheer =
+    stars === 3
+      ? '探长：满星通关,神探级表现！⭐'
+      : stars === 2
+        ? '探长：很棒!再练一次冲满星 🌟'
+        : '探长：通关!多练几次会更稳 💪'
+  const celebrate = stars === 3 || !!robot || (isExam && (grade === 'silver' || grade === 'gold'))
 
   useEffect(() => {
     if (robot) {
@@ -47,7 +54,8 @@ export default function ResultScreen({
   }, [robot])
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col items-center justify-center px-6 py-8 text-center">
+    <div className="relative mx-auto flex min-h-dvh max-w-2xl flex-col items-center justify-center px-6 py-8 text-center">
+      {celebrate && <Confetti />}
       {isExam ? (
         <>
           <motion.div
@@ -86,6 +94,7 @@ export default function ResultScreen({
               </motion.span>
             ))}
           </div>
+          <p className="mt-2 font-semibold text-white/80">{lessonCheer}</p>
         </>
       )}
 
@@ -156,6 +165,30 @@ export default function ResultScreen({
       >
         {isExam && grade === 'fail' ? '再来一次' : 'Continue'}
       </button>
+    </div>
+  )
+}
+
+// 庆祝彩屑：从顶部中央迸发的 emoji 粒子。
+function Confetti() {
+  const bits = ['⭐', '⚡', '🎉', '✨', '🏆', '🌟']
+  return (
+    <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
+      {Array.from({ length: 16 }).map((_, i) => {
+        const x = (Math.random() - 0.5) * 360
+        const y = 120 + Math.random() * 320
+        return (
+          <motion.span
+            key={i}
+            initial={{ opacity: 1, x: 0, y: 0, scale: 0.6 }}
+            animate={{ opacity: 0, x, y, scale: 1.2, rotate: Math.random() * 360 }}
+            transition={{ duration: 1.3 + Math.random() * 0.6, ease: 'easeOut' }}
+            className="absolute left-1/2 top-24 text-2xl"
+          >
+            {bits[i % bits.length]}
+          </motion.span>
+        )
+      })}
     </div>
   )
 }

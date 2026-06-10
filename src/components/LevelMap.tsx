@@ -45,7 +45,7 @@ export default function LevelMap({
       window.removeEventListener('orientationchange', onResize)
     }
   }, [])
-  const HEIGHT = Math.max(300, Math.min(480, vh - 270)) // room for TopBar + check-in + daily quests + TabBar
+  const HEIGHT = Math.max(280, Math.min(470, vh - 300)) // room for TopBar + 探长 + check-in + quests + TabBar
   const BASE_Y = HEIGHT / 2
   const AMP = Math.round(HEIGHT * 0.14)
   const posOf = (i: number) => ({ x: PAD + i * SP, y: BASE_Y + AMP * Math.sin(i * 0.85) })
@@ -198,7 +198,8 @@ function LessonStop({
 }) {
   const done = stars > 0
   const isBoss = !!lesson.boss
-  const accent = isBoss ? '#ff4d6d' : unit.color
+  const mastered = !isBoss && stars >= 3 // 3★ = 已精通（金）
+  const accent = isBoss ? '#ff4d6d' : mastered ? '#ffcc33' : unit.color
   return (
     <div className="flex flex-col items-center">
       {/* sector label above the first node of each sector */}
@@ -226,6 +227,7 @@ function LessonStop({
           开始 ▶
         </motion.div>
       )}
+      {mastered && <div className="absolute -top-7 text-xl">👑</div>}
 
       <button
         onClick={unlocked ? onStart : undefined}

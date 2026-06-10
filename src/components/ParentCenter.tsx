@@ -181,12 +181,17 @@ export default function ParentCenter({ onStartPlacement }: { onStartPlacement: (
         <div className="mb-5 space-y-2">
           {CURRICULUM.map((u) => {
             const done = u.lessons.filter((l) => results[l.id]).length
+            const gold = u.lessons.filter((l) => (results[l.id]?.stars ?? 0) >= 3).length
             const pct = Math.round((done / u.lessons.length) * 100)
             return (
               <div key={u.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                 <div className="mb-1 flex justify-between text-sm">
                   <span className="font-bold">{u.zh}</span>
-                  <span className="text-white/55">{done}/{u.lessons.length}{u.kind === 'exam' && examGrades[u.lessons[0].id] ? ` · ${MEDAL[examGrades[u.lessons[0].id]]}` : ''}</span>
+                  <span className="text-white/55">
+                    {done}/{u.lessons.length}
+                    {gold > 0 && <span className="text-energon"> · 👑{gold}</span>}
+                    {u.kind === 'exam' && examGrades[u.lessons[0].id] ? ` · ${MEDAL[examGrades[u.lessons[0].id]]}` : ''}
+                  </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/10">
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, background: u.color }} />

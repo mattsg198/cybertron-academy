@@ -1,5 +1,8 @@
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { lessonByIds, lessonOrder } from '../data/curriculum'
 import { useGameStore, srsStats } from '../store/useGameStore'
+import { sfx } from '../lib/sfx'
 import type { Lesson } from '../types'
 import type { Skill } from '../lib/specialize'
 
@@ -27,7 +30,10 @@ export default function DailyQuests({
   const results = useGameStore((s) => s.results)
   const srs = useGameStore((s) => s.srs)
   const isUnlocked = useGameStore((s) => s.isLessonUnlocked)
+  const lastChest = useGameStore((s) => s.lastChest)
+  const openDailyChest = useGameStore((s) => s.openDailyChest)
   const stats = srsStats(srs)
+  const [loot, setLoot] = useState<string | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
   const t = daily.day === today ? daily : { lessons: 0, reviews: 0, skill: 0 }
@@ -72,6 +78,16 @@ export default function DailyQuests({
   ]
   const doneCount = quests.filter((q) => q.done).length
   const allDone = doneCount === quests.length
+  const chestReady = allDone && lastChest !== today
+
+  const openChest = () => {
+    const got = openDailyChest()
+    if (got) {
+      sfx.levelUp()
+      setLoot(`+${got.energon} ⚡${got.shield ? '  🛡️+1' : ''}`)
+      setTimeout(() => setLoot(null), 2200)
+    }
+  }
 
   // recommend: highest-priority still-actionable quest
   const recommend =
@@ -80,14 +96,23 @@ export default function DailyQuests({
     quests.find((q) => q.id === 'skill' && !q.done)
 
   return (
-    <div className="mx-auto w-full max-w-4xl rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5">
+    <div className="relative mx-auto w-full max-w-4xl rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-black">
           🎯 今日任务 <span className="text-white/45">{doneCount}/3</span>
         </h3>
-        {allDone ? (
+        {chestReady ? (
+          <motion.button
+            onClick={openChest}
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ duration: 1.1, repeat: Infinity }}
+            className="rounded-full bg-gradient-to-r from-energon to-spark px-4 py-1.5 text-xs font-black text-[#1a1300]"
+          >
+            🎁 开启惊喜宝箱
+          </motion.button>
+        ) : allDone ? (
           <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-black text-emerald-300">
-            全部完成 🎉
+            全部完成 🎉 宝箱已开
           </span>
         ) : recommend ? (
           <button
@@ -98,6 +123,20 @@ export default function DailyQuests({
           </button>
         ) : null}
       </div>
+
+      {/* chest loot reveal */}
+      <AnimatePresence>
+        {loot && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="pointer-events-none absolute right-4 top-9 z-10 rounded-xl border border-energon/50 bg-[#1a1606] px-3 py-1.5 text-sm font-black text-energon shadow-lg"
+          >
+            🎁 {loot}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-3 gap-2">
         {quests.map((q) => (

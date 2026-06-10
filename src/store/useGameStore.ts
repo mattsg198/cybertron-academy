@@ -148,6 +148,7 @@ interface GameState {
   shields: number // 连击护盾数量（漏天自动护连击）
   cosmetics: string[] // 已购皮肤 id
   activeTheme: string // 当前地图主题 id
+  lastChest: string | null // 最近一次开每日宝箱的日期
 
   // selectors
   isLessonUnlocked: (unitId: string, lessonId: string) => boolean
@@ -182,6 +183,8 @@ interface GameState {
   claimDaily: () => number
   /** Claim a reached streak milestone (3/7/14/30/60 days). Returns it, or null. */
   claimStreakReward: () => Milestone | null
+  /** Open today's surprise chest (once/day, after daily quests done). Returns loot. */
+  openDailyChest: () => { energon: number; shield: boolean } | null
   /** Buy a 连击护盾 with energon. Returns true on success. */
   buyShield: () => boolean
   /** Buy a cosmetic (theme) by id. Returns true on success. */
@@ -217,6 +220,7 @@ export const useGameStore = create<GameState>()(
       shields: 0,
       cosmetics: ['default'],
       activeTheme: 'default',
+      lastChest: null,
 
       isLessonUnlocked: (unitId, lessonId) => {
         const idx = lessonOrder.findIndex(
@@ -415,6 +419,19 @@ export const useGameStore = create<GameState>()(
         return m
       },
 
+      openDailyChest: () => {
+        const today = todayStr()
+        if (get().lastChest === today) return null
+        const energonReward = 30 + Math.floor(Math.random() * 5) * 10 // 30..70
+        const shield = Math.random() < 0.25 && get().shields < SHIELD_MAX
+        set({
+          lastChest: today,
+          energon: get().energon + energonReward,
+          shields: get().shields + (shield ? 1 : 0),
+        })
+        return { energon: energonReward, shield }
+      },
+
       buyShield: () => {
         if (get().energon < SHIELD_COST || get().shields >= SHIELD_MAX) return false
         set({ energon: get().energon - SHIELD_COST, shields: get().shields + 1 })
@@ -474,6 +491,7 @@ export const useGameStore = create<GameState>()(
           shields: 0,
           cosmetics: ['default'],
           activeTheme: 'default',
+          lastChest: null,
         }),
     }),
     { name: 'cybertron-academy-v1' },
