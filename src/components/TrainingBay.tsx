@@ -1,6 +1,7 @@
 import { WORD_PACKS, totalWords, type WordPack } from '../data/wordbank'
 import { robotById } from '../data/robots'
 import { useGameStore, srsStats } from '../store/useGameStore'
+import { ARCADE_GAMES } from '../lib/arcade'
 import type { Skill } from '../lib/specialize'
 import RobotAvatar from './RobotAvatar'
 
@@ -8,13 +9,16 @@ export default function TrainingBay({
   onStartVocab,
   onStartReview,
   onStartSkill,
+  onStartGame,
 }: {
   onStartVocab: (pack: WordPack) => void
   onStartReview: () => void
   onStartSkill: (skill: Skill) => void
+  onStartGame: (gameId: string) => void
 }) {
   const inspector = robotById('tr3')
   const srs = useGameStore((s) => s.srs)
+  const arcadeBest = useGameStore((s) => s.arcadeBest)
   const stats = srsStats(srs)
   const hasReview = stats.collected > 0 || stats.due > 0
 
@@ -32,6 +36,36 @@ export default function TrainingBay({
             <p className="font-black text-cyber">汽车人探长：单挑专项，越练越强！</p>
             <p className="text-sm text-white/70">词库共 {totalWords} 词，按主题刷；错题靠间隔复习记牢。</p>
           </div>
+        </div>
+
+        {/* ⚡竞技场 — 反应速度小游戏 */}
+        <h2 className="mb-2 text-xl font-black">⚡ 竞技场 · Arcade</h2>
+        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {ARCADE_GAMES.map((g) => (
+            <button
+              key={g.id}
+              onClick={g.ready ? () => onStartGame(g.id) : undefined}
+              disabled={!g.ready}
+              className={`relative rounded-2xl border-2 px-4 py-4 text-left transition ${
+                g.ready
+                  ? 'border-spark/40 bg-spark/10 hover:scale-[1.02] active:scale-95'
+                  : 'border-white/10 bg-white/[0.03] opacity-60'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">{g.emoji}</span>
+                <span className="font-black">{g.name}</span>
+              </div>
+              <div className="mt-1 text-xs text-white/55">{g.desc}</div>
+              {g.ready ? (
+                <div className="mt-1 text-xs font-bold text-energon">🏆 最佳 {arcadeBest[g.id] ?? 0}</div>
+              ) : (
+                <span className="absolute right-2 top-2 rounded-full bg-white/10 px-1.5 text-[10px] text-white/50">
+                  soon
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
         {/* SRS stats */}

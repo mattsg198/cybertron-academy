@@ -18,6 +18,7 @@ import ParentCenter from './components/ParentCenter'
 import CheckInCard from './components/CheckInCard'
 import DailyQuests from './components/DailyQuests'
 import InspectorBubble from './components/InspectorBubble'
+import Arcade from './components/arcade/Arcade'
 import EyeBreakOverlay, { useEyeBreak } from './components/EyeBreak'
 import PlacementResult from './components/PlacementResult'
 import TabBar, { Tab } from './components/TabBar'
@@ -28,6 +29,7 @@ type View =
   | { name: 'practice'; lesson: Lesson }
   | { name: 'placement'; lesson: Lesson }
   | { name: 'placementResult'; placement: Placement; correct: number; total: number }
+  | { name: 'arcade'; gameId: string }
   | {
       name: 'result'
       earned: number
@@ -76,6 +78,8 @@ export default function App() {
     const lesson = makeSkillLesson(skill)
     if (lesson) setView({ name: 'practice', lesson })
   }
+
+  const startGame = (gameId: string) => setView({ name: 'arcade', gameId })
 
   const finishLesson = (correct: number, total: number) => {
     if (view.name !== 'lesson') return
@@ -144,6 +148,9 @@ export default function App() {
         onQuit={() => setView({ name: 'home' })}
       />
     )
+  }
+  if (view.name === 'arcade') {
+    return <Arcade gameId={view.gameId} onQuit={() => setView({ name: 'home' })} />
   }
   if (view.name === 'placement') {
     return (
@@ -214,6 +221,7 @@ export default function App() {
             onStartVocab={startVocab}
             onStartReview={startReview}
             onStartSkill={startSkill}
+            onStartGame={startGame}
           />
         )}
         {tab === 'parent' && <ParentCenter onStartPlacement={startPlacement} />}

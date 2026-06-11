@@ -149,6 +149,9 @@ interface GameState {
   cosmetics: string[] // 已购皮肤 id
   activeTheme: string // 当前地图主题 id
   lastChest: string | null // 最近一次开每日宝箱的日期
+  arcadeBest: Record<string, number> // 竞技场各游戏个人最佳
+  arcadeDay: string // 竞技场能量当日 key
+  arcadeEarned: number // 竞技场今日已获能量（封顶用）
 
   // selectors
   isLessonUnlocked: (unitId: string, lessonId: string) => boolean
@@ -185,6 +188,12 @@ interface GameState {
   claimStreakReward: () => Milestone | null
   /** Open today's surprise chest (once/day, after daily quests done). Returns loot. */
   openDailyChest: () => { energon: number; shield: boolean } | null
+  /** Finish an arcade round: update best, award capped energon, advance streak. */
+  arcadeFinish: (
+    gameId: string,
+    score: number,
+    correct: number,
+  ) => { best: number; earned: number; isNewBest: boolean }
   /** Buy a 连击护盾 with energon. Returns true on success. */
   buyShield: () => boolean
   /** Buy a cosmetic (theme) by id. Returns true on success. */
@@ -221,6 +230,9 @@ export const useGameStore = create<GameState>()(
       cosmetics: ['default'],
       activeTheme: 'default',
       lastChest: null,
+      arcadeBest: {},
+      arcadeDay: '',
+      arcadeEarned: 0,
 
       isLessonUnlocked: (unitId, lessonId) => {
         const idx = lessonOrder.findIndex(
@@ -432,6 +444,34 @@ export const useGameStore = create<GameState>()(
         return { energon: energonReward, shield }
       },
 
+      arcadeFinish: (gameId, score, correct) => {
+        const today = todayStr()
+        const ARCADE_CAP = 60 // 竞技场每日能量上限,避免靠刷反应取代正课
+        const alreadyEarned = get().arcadeDay === today ? get().arcadeEarned : 0
+        const earned = Math.max(0, Math.min(ARCADE_CAP - alreadyEarned, correct * 2))
+
+        const last = get().lastPlayed
+        const adv = advanceStreak(last, today, get().streak, get().shields)
+        let energonToday = get().energonToday
+        if (last !== today) energonToday = 0
+        const d = rollDaily(get().daily)
+
+        const prevBest = get().arcadeBest[gameId] ?? 0
+        const best = Math.max(prevBest, score)
+        set({
+          energon: get().energon + earned,
+          energonToday: energonToday + earned,
+          arcadeEarned: alreadyEarned + earned,
+          arcadeDay: today,
+          streak: adv.streak,
+          shields: adv.shields,
+          lastPlayed: today,
+          daily: { ...d, skill: d.skill + 1 }, // 计入"今日专项/游戏日"
+          arcadeBest: { ...get().arcadeBest, [gameId]: best },
+        })
+        return { best, earned, isNewBest: score > prevBest }
+      },
+
       buyShield: () => {
         if (get().energon < SHIELD_COST || get().shields >= SHIELD_MAX) return false
         set({ energon: get().energon - SHIELD_COST, shields: get().shields + 1 })
@@ -492,6 +532,9 @@ export const useGameStore = create<GameState>()(
           cosmetics: ['default'],
           activeTheme: 'default',
           lastChest: null,
+          arcadeBest: {},
+          arcadeDay: '',
+          arcadeEarned: 0,
         }),
     }),
     { name: 'cybertron-academy-v1' },
