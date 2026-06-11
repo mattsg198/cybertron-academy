@@ -19,6 +19,8 @@ export const ARCADE_GAMES: ArcadeGameDef[] = [
   { id: 'blitz', name: '能量速配', emoji: '⚡', desc: '限时中英速配,连击翻倍', ready: true },
   { id: 'firewall', name: '语法防火墙', emoji: '🧱', desc: '句子对错,极速判断', ready: true },
   { id: 'sonic', name: '声波拦截', emoji: '📡', desc: '听音速点,反应越快越强', ready: true },
+  { id: 'rain', name: '单词雨', emoji: '🌧️', desc: '落下的英文里接住对的那个', ready: true },
+  { id: 'shooter', name: '飞机射击', emoji: '🚀', desc: '击落带目标词的敌机', ready: true },
 ]
 
 export function shuffle<T>(arr: T[]): T[] {

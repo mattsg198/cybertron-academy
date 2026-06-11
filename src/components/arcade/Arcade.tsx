@@ -6,6 +6,8 @@ import { sfx } from '../../lib/sfx'
 import EnergonBlitz from './EnergonBlitz'
 import Firewall from './Firewall'
 import SonicIntercept from './SonicIntercept'
+import WordRain from './WordRain'
+import SkyStriker from './SkyStriker'
 
 type Phase = 'ready' | 'play' | 'done'
 
@@ -121,6 +123,10 @@ export default function Arcade({ gameId, onQuit }: { gameId: string; onQuit: () 
         <Firewall key={runKey} onEnd={handleEnd} />
       ) : gameId === 'sonic' ? (
         <SonicIntercept key={runKey} onEnd={handleEnd} />
+      ) : gameId === 'rain' ? (
+        <WordRain key={runKey} onEnd={handleEnd} />
+      ) : gameId === 'shooter' ? (
+        <SkyStriker key={runKey} onEnd={handleEnd} />
       ) : (
         <div className="flex h-full items-center justify-center text-white/60">敬请期待…</div>
       )}
