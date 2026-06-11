@@ -19,6 +19,7 @@ import CheckInCard from './components/CheckInCard'
 import DailyQuests from './components/DailyQuests'
 import InspectorBubble from './components/InspectorBubble'
 import Arcade from './components/arcade/Arcade'
+import ArcadeHub from './components/arcade/ArcadeHub'
 import EyeBreakOverlay, { useEyeBreak } from './components/EyeBreak'
 import PlacementResult from './components/PlacementResult'
 import TabBar, { Tab } from './components/TabBar'
@@ -227,9 +228,9 @@ export default function App() {
             onStartVocab={startVocab}
             onStartReview={startReview}
             onStartSkill={startSkill}
-            onStartGame={startGame}
           />
         )}
+        {tab === 'arcade' && <ArcadeHub onStartGame={startGame} />}
         {tab === 'parent' && <ParentCenter onStartPlacement={startPlacement} />}
       </main>
 

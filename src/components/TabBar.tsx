@@ -1,8 +1,9 @@
-export type Tab = 'map' | 'training' | 'garage' | 'parent'
+export type Tab = 'map' | 'training' | 'arcade' | 'garage' | 'parent'
 
 const TABS: { id: Tab; icon: string; label: string; ready: boolean }[] = [
   { id: 'map', icon: '🗺️', label: '地图', ready: true },
   { id: 'training', icon: '⚡', label: '专项', ready: true },
+  { id: 'arcade', icon: '🎮', label: '竞技场', ready: true },
   { id: 'garage', icon: '🕵️', label: '探长店', ready: true },
   { id: 'parent', icon: '👤', label: '家长', ready: true },
 ]
