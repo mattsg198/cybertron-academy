@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ROBOTS, robotById } from '../data/robots'
-import { THEMES, SHIELD_COST, SHIELD_MAX } from '../data/shop'
+import { THEMES, SHIELD_COST, SHIELD_MAX, TOKEN_COST } from '../data/shop'
 import { useGameStore } from '../store/useGameStore'
 import { speak } from '../lib/speech'
 import { sfx } from '../lib/sfx'
@@ -10,6 +10,8 @@ export default function Collection() {
   const unlocked = useGameStore((s) => s.unlockedRobots)
   const energon = useGameStore((s) => s.energon)
   const shields = useGameStore((s) => s.shields)
+  const tokens = useGameStore((s) => s.tokens)
+  const buyToken = useGameStore((s) => s.buyToken)
   const cosmetics = useGameStore((s) => s.cosmetics)
   const activeTheme = useGameStore((s) => s.activeTheme)
   const buyShield = useGameStore((s) => s.buyShield)
@@ -57,6 +59,26 @@ export default function Collection() {
             }`}
           >
             {shields >= SHIELD_MAX ? '已满' : `购买 ${SHIELD_COST} ⚡`}
+          </button>
+        </div>
+
+        {/* 游戏券 */}
+        <h2 className="mb-2 text-xl font-black">🎟️ 游戏券</h2>
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-white/12 bg-white/5 px-4 py-3">
+          <div>
+            <div className="font-bold">游戏券 ×{tokens}</div>
+            <div className="text-xs text-white/55">进竞技场每局 1 张;每天免费送 1 张,学习赚能量也会自动攒券</div>
+          </div>
+          <button
+            onClick={() => {
+              if (buyToken()) sfx.transform()
+            }}
+            disabled={energon < TOKEN_COST}
+            className={`rounded-full px-4 py-2 text-sm font-black ${
+              energon >= TOKEN_COST ? 'bg-cyber text-black active:scale-95' : 'bg-white/10 text-white/40'
+            }`}
+          >
+            购买 {TOKEN_COST} ⚡
           </button>
         </div>
 

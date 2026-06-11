@@ -54,6 +54,11 @@ export default function App() {
   useEffect(() => {
     document.body.style.background = themeById(activeTheme).bg
   }, [activeTheme])
+  // 每日免费游戏券
+  const claimFreeToken = useGameStore((s) => s.claimFreeToken)
+  useEffect(() => {
+    claimFreeToken()
+  }, [claimFreeToken])
 
   const startPlacement = () => setView({ name: 'placement', lesson: makePlacementLesson() })
 

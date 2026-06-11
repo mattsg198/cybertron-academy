@@ -2,6 +2,7 @@ import { WORD_PACKS, totalWords, type WordPack } from '../data/wordbank'
 import { robotById } from '../data/robots'
 import { useGameStore, srsStats } from '../store/useGameStore'
 import { ARCADE_GAMES } from '../lib/arcade'
+import { TOKEN_ENERGON } from '../data/shop'
 import type { Skill } from '../lib/specialize'
 import RobotAvatar from './RobotAvatar'
 
@@ -19,6 +20,8 @@ export default function TrainingBay({
   const inspector = robotById('tr3')
   const srs = useGameStore((s) => s.srs)
   const arcadeBest = useGameStore((s) => s.arcadeBest)
+  const tokens = useGameStore((s) => s.tokens)
+  const tokenProg = useGameStore((s) => s.tokenProg)
   const stats = srsStats(srs)
   const hasReview = stats.collected > 0 || stats.due > 0
 
@@ -39,7 +42,13 @@ export default function TrainingBay({
         </div>
 
         {/* ⚡竞技场 — 反应速度小游戏 */}
-        <h2 className="mb-2 text-xl font-black">⚡ 竞技场 · Arcade</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-xl font-black">⚡ 竞技场 · Arcade</h2>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="rounded-full bg-energon/15 px-3 py-1 font-black text-energon">🎟️ {tokens}</span>
+            <span className="text-white/45">下一张 {tokenProg}/{TOKEN_ENERGON}⚡</span>
+          </div>
+        </div>
         <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {ARCADE_GAMES.map((g) => (
             <button

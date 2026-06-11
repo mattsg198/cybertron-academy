@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SrsRef } from '../types'
 import { CURRICULUM, lessonOrder, unitById } from '../data/curriculum'
-import { SHIELD_COST, SHIELD_MAX } from '../data/shop'
+import { SHIELD_COST, SHIELD_MAX, TOKEN_COST, TOKEN_ENERGON } from '../data/shop'
 
 export interface Voucher {
   lessonId: string
@@ -13,6 +13,17 @@ export interface Voucher {
 const todayStr = () => new Date().toISOString().slice(0, 10)
 const dayDiff = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
+
+// 赚能量时累进游戏券:每攒够 TOKEN_ENERGON 能量 +1 张券。
+function bumpTokens(prog: number, add: number): { tokens: number; prog: number } {
+  let p = prog + add
+  let t = 0
+  while (p >= TOKEN_ENERGON) {
+    p -= TOKEN_ENERGON
+    t++
+  }
+  return { tokens: t, prog: p }
+}
 
 // Advance the streak for today's first activity. A 连击护盾 covers a missed day
 // so the streak survives instead of resetting (Duolingo-style streak freeze).
@@ -152,6 +163,9 @@ interface GameState {
   arcadeBest: Record<string, number> // 竞技场各游戏个人最佳
   arcadeDay: string // 竞技场能量当日 key
   arcadeEarned: number // 竞技场今日已获能量（封顶用）
+  tokens: number // 🎟️ 游戏券（进竞技场每局 1 张）
+  tokenProg: number // 距下一张券的能量进度（0..TOKEN_ENERGON）
+  lastFreeToken: string | null // 最近一次领每日免费券的日期
 
   // selectors
   isLessonUnlocked: (unitId: string, lessonId: string) => boolean
@@ -194,6 +208,12 @@ interface GameState {
     score: number,
     correct: number,
   ) => { best: number; earned: number; isNewBest: boolean }
+  /** Spend 1 game token to enter an arcade round. Returns true if affordable. */
+  spendToken: () => boolean
+  /** Grant the once-per-day free game token. */
+  claimFreeToken: () => void
+  /** Buy 1 game token with energon. Returns true on success. */
+  buyToken: () => boolean
   /** Buy a 连击护盾 with energon. Returns true on success. */
   buyShield: () => boolean
   /** Buy a cosmetic (theme) by id. Returns true on success. */
@@ -233,6 +253,9 @@ export const useGameStore = create<GameState>()(
       arcadeBest: {},
       arcadeDay: '',
       arcadeEarned: 0,
+      tokens: 1,
+      tokenProg: 0,
+      lastFreeToken: null,
 
       isLessonUnlocked: (unitId, lessonId) => {
         const idx = lessonOrder.findIndex(
@@ -310,12 +333,15 @@ export const useGameStore = create<GameState>()(
         }
 
         const daily = rollDaily(get().daily)
+        const tb = bumpTokens(get().tokenProg, award)
         set({
           results,
           examGrades,
           vouchers,
           energon: get().energon + award,
           energonToday: energonToday + award,
+          tokens: get().tokens + tb.tokens,
+          tokenProg: tb.prog,
           streak,
           shields: adv.shields,
           lastPlayed: today,
@@ -348,9 +374,12 @@ export const useGameStore = create<GameState>()(
               ? { ...d, skill: d.skill + 1 }
               : d
 
+        const tb = bumpTokens(get().tokenProg, earned)
         set({
           energon: get().energon + earned,
           energonToday: energonToday + earned,
+          tokens: get().tokens + tb.tokens,
+          tokenProg: tb.prog,
           streak,
           shields: adv.shields,
           lastPlayed: today,
@@ -458,9 +487,12 @@ export const useGameStore = create<GameState>()(
 
         const prevBest = get().arcadeBest[gameId] ?? 0
         const best = Math.max(prevBest, score)
+        const tb = bumpTokens(get().tokenProg, earned)
         set({
           energon: get().energon + earned,
           energonToday: energonToday + earned,
+          tokens: get().tokens + tb.tokens,
+          tokenProg: tb.prog,
           arcadeEarned: alreadyEarned + earned,
           arcadeDay: today,
           streak: adv.streak,
@@ -470,6 +502,24 @@ export const useGameStore = create<GameState>()(
           arcadeBest: { ...get().arcadeBest, [gameId]: best },
         })
         return { best, earned, isNewBest: score > prevBest }
+      },
+
+      spendToken: () => {
+        if (get().tokens < 1) return false
+        set({ tokens: get().tokens - 1 })
+        return true
+      },
+
+      claimFreeToken: () => {
+        const today = todayStr()
+        if (get().lastFreeToken === today) return
+        set({ tokens: get().tokens + 1, lastFreeToken: today })
+      },
+
+      buyToken: () => {
+        if (get().energon < TOKEN_COST) return false
+        set({ energon: get().energon - TOKEN_COST, tokens: get().tokens + 1 })
+        return true
       },
 
       buyShield: () => {
@@ -535,6 +585,9 @@ export const useGameStore = create<GameState>()(
           arcadeBest: {},
           arcadeDay: '',
           arcadeEarned: 0,
+          tokens: 1,
+          tokenProg: 0,
+          lastFreeToken: null,
         }),
     }),
     { name: 'cybertron-academy-v1' },

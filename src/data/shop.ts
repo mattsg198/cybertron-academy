@@ -6,6 +6,9 @@
 export const SHIELD_COST = 120 // 连击护盾单价
 export const SHIELD_MAX = 5
 
+export const TOKEN_COST = 50 // 用能量买 1 张游戏券
+export const TOKEN_ENERGON = 80 // 每累计赚够这么多能量,自动 +1 张游戏券
+
 export interface ThemeItem {
   id: string
   name: string
