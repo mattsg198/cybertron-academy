@@ -208,7 +208,7 @@ export default function App() {
         {tab === 'map' && (
           <div className="flex flex-1 flex-col">
             <div className="space-y-2 px-4 pt-2">
-              <InspectorBubble />
+              <InspectorBubble onOpenArcade={() => setTab('arcade')} />
               <CheckInCard />
               <DailyQuests
                 onStartMain={startLesson}

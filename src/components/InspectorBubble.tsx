@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useGameStore } from '../store/useGameStore'
 import { robotById } from '../data/robots'
+import { dailyBoard, rankOf } from '../lib/leaderboard'
 import RobotAvatar from './RobotAvatar'
 
 const inspector = robotById('tr3')
@@ -14,11 +15,15 @@ const dayDiff = (a: string, b: string) =>
   Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
 
 // 汽车人探长情感化问候——根据连击 / 久未登录 / 今日进度说不同的话。
-export default function InspectorBubble() {
+export default function InspectorBubble({ onOpenArcade }: { onOpenArcade?: () => void }) {
   const streak = useGameStore((s) => s.streak)
   const lastPlayed = useGameStore((s) => s.lastPlayed)
   const energonToday = useGameStore((s) => s.energonToday)
   const dailyGoal = useGameStore((s) => s.dailyGoal)
+
+  const today = new Date().toISOString().slice(0, 10)
+  const myScore = lastPlayed === today ? energonToday : 0
+  const rank = rankOf(dailyBoard(myScore))
 
   const msg = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10)
@@ -42,6 +47,13 @@ export default function InspectorBubble() {
       <div className="relative rounded-2xl rounded-bl-sm border border-cyber/30 bg-cyber/10 px-3 py-1.5 text-sm font-bold text-cyber">
         {msg}
       </div>
+      <button
+        onClick={onOpenArcade}
+        className="ml-auto shrink-0 rounded-full border border-energon/40 bg-energon/10 px-3 py-1.5 text-sm font-black text-energon active:scale-95"
+        title="今日学习榜"
+      >
+        🏆 第{rank}名
+      </button>
     </div>
   )
 }
