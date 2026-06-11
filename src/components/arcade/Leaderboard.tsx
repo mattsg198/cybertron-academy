@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/useGameStore'
 import { dailyBoard, rankOf } from '../../lib/leaderboard'
+import AssetImage from '../AssetImage'
 
 const MEDAL = ['🥇', '🥈', '🥉']
 
@@ -51,7 +52,11 @@ export default function Leaderboard() {
             }`}
           >
             <span className="w-6 text-center text-sm font-black text-white/60">{MEDAL[i] ?? i + 1}</span>
-            <span className="text-2xl">{r.emoji}</span>
+            <AssetImage
+              slot={r.you ? 'robots/tr3.png' : `students/${r.id}.png`}
+              emoji={r.emoji}
+              sizeClass="text-2xl"
+            />
             <span className={`flex-1 font-bold ${r.you ? 'text-cyber' : ''}`}>
               {r.name}
               {!r.you && r.student && (

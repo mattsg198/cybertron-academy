@@ -49,6 +49,15 @@ export const BRAND_ASSETS: BrandedAsset[] = [
   { key: 'apple-touch', slot: 'apple-touch-icon.png', role: 'iOS 主屏图标', placeholder: '自动生成·能量闪电', size: '180×180 PNG', kind: 'brand' },
 ]
 
+// —— 排行榜 AI 学员(原创角色,无需授权;与机甲占位同一套风格)——
+export const STUDENT_ASSETS: BrandedAsset[] = [
+  { key: 'nova', slot: 'students/nova.png', role: '排行榜 AI 学员 Nova', placeholder: '🌟', size: '512×512 PNG 透明', kind: 'character' },
+  { key: 'volt', slot: 'students/volt.png', role: '排行榜 AI 学员 Volt', placeholder: '⚡', size: '512×512 PNG 透明', kind: 'character' },
+  { key: 'sparky', slot: 'students/sparky.png', role: '排行榜 AI 学员 Sparky', placeholder: '✨', size: '512×512 PNG 透明', kind: 'character' },
+  { key: 'cog', slot: 'students/cog.png', role: '排行榜 AI 学员 Cog', placeholder: '⚙️', size: '512×512 PNG 透明', kind: 'character' },
+  { key: 'rusty', slot: 'students/rusty.png', role: '排行榜 AI 学员 Rusty', placeholder: '🔩', size: '512×512 PNG 透明', kind: 'character' },
+]
+
 export const ALL_BRANDED_ASSETS = [...CHARACTER_ASSETS, ...BOSS_ASSETS, ...BRAND_ASSETS]
 
 /** Boss 头像槽位路径(用于 BossInfo.image 兜底)。 */
