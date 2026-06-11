@@ -3,6 +3,7 @@ import { ARCADE_GAMES } from '../../lib/arcade'
 import { TOKEN_ENERGON } from '../../data/shop'
 import { robotById } from '../../data/robots'
 import RobotAvatar from '../RobotAvatar'
+import Leaderboard from './Leaderboard'
 
 // 🎮 竞技场首页:券余额 + 攒券进度 + 三款反应游戏(个人最佳)。
 export default function ArcadeHub({ onStartGame }: { onStartGame: (gameId: string) => void }) {
@@ -71,6 +72,11 @@ export default function ArcadeHub({ onStartGame }: { onStartGame: (gameId: strin
               </div>
             </button>
           ))}
+        </div>
+
+        {/* 今日学习榜 */}
+        <div className="mt-6">
+          <Leaderboard />
         </div>
       </div>
     </div>

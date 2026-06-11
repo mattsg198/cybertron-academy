@@ -2,6 +2,7 @@ import { useGameStore } from '../store/useGameStore'
 
 export default function TopBar({ onOpenCollection }: { onOpenCollection: () => void }) {
   const energon = useGameStore((s) => s.energon)
+  const tokens = useGameStore((s) => s.tokens)
   const streak = useGameStore((s) => s.streak)
   const robots = useGameStore((s) => s.unlockedRobots.length)
   const energonToday = useGameStore((s) => s.energonToday)
@@ -18,6 +19,10 @@ export default function TopBar({ onOpenCollection }: { onOpenCollection: () => v
         <div className="flex items-center gap-1.5 font-extrabold">
           <span className="text-energon text-xl">⚡</span>
           <span>{energon}</span>
+        </div>
+        <div className="flex items-center gap-1.5 font-extrabold" title="游戏券">
+          <span className="text-xl">🎟️</span>
+          <span>{tokens}</span>
         </div>
 
         {/* daily goal ring */}
