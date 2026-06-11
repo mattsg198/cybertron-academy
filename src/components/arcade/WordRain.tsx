@@ -7,8 +7,10 @@ import type { WordEntry } from '../../data/wordbank'
 
 const GAME_SEC = 45
 
-type Chip = { key: number; word: string; x: number; isTarget: boolean }
+type Chip = { key: number; word: string; x: number; isTarget: boolean; delay: number }
 type Round = { target: WordEntry; chips: Chip[]; dur: number }
+
+const LANES = [10, 32, 54, 76] // 车道(百分比),避免重叠
 
 // 🌧️ 单词雨:看中文,在落下的英文里点中对应的那个;落到底没接住=漏。判对喂 SRS。
 export default function WordRain({ onEnd }: { onEnd: (score: number, correct: number) => void }) {
@@ -34,8 +36,15 @@ export default function WordRain({ onEnd }: { onEnd: (score: number, correct: nu
     const target = pool[i % pool.length]
     const others = pick(pool.filter((w) => w.word !== target.word && w.zh !== target.zh), 3)
     const items = shuffle([{ w: target, t: true }, ...others.map((w) => ({ w, t: false }))])
-    const chips = items.map((o) => ({ key: keyRef.current++, word: o.w.word, x: 6 + Math.random() * 76, isTarget: o.t }))
-    const dur = Math.max(2, 3.6 - scoreRef.current / 700)
+    const lanes = shuffle(LANES)
+    const chips = items.map((o, k) => ({
+      key: keyRef.current++,
+      word: o.w.word,
+      x: lanes[k] + (Math.random() * 6 - 3),
+      isTarget: o.t,
+      delay: k * 0.65, // 错峰先后落下
+    }))
+    const dur = Math.max(3.4, 5.4 - scoreRef.current / 1000) // 整体放慢
     return { target, chips, dur }
   }
 
@@ -114,7 +123,7 @@ export default function WordRain({ onEnd }: { onEnd: (score: number, correct: nu
             key={chip.key}
             initial={{ y: -44 }}
             animate={{ y: h }}
-            transition={{ duration: round.dur, ease: 'linear' }}
+            transition={{ duration: round.dur, delay: chip.delay, ease: 'linear' }}
             onAnimationComplete={() => chip.isTarget && targetMiss()}
             onClick={() => tap(chip)}
             style={{ left: `${chip.x}%` }}
