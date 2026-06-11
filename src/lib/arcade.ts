@@ -17,8 +17,8 @@ export interface ArcadeGameDef {
 
 export const ARCADE_GAMES: ArcadeGameDef[] = [
   { id: 'blitz', name: '能量速配', emoji: '⚡', desc: '限时中英速配,连击翻倍', ready: true },
-  { id: 'firewall', name: '语法防火墙', emoji: '🧱', desc: '句子对错,极速判断', ready: false },
-  { id: 'sonic', name: '声波拦截', emoji: '📡', desc: '听音速点,反应越快越强', ready: false },
+  { id: 'firewall', name: '语法防火墙', emoji: '🧱', desc: '句子对错,极速判断', ready: true },
+  { id: 'sonic', name: '声波拦截', emoji: '📡', desc: '听音速点,反应越快越强', ready: true },
 ]
 
 export function shuffle<T>(arr: T[]): T[] {

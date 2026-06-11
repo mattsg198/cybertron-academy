@@ -21,10 +21,12 @@ export default function DailyQuests({
   onStartMain,
   onStartReview,
   onStartSkill,
+  onStartGame,
 }: {
   onStartMain: (unitId: string, lesson: Lesson) => void
   onStartReview: () => void
   onStartSkill: (skill: Skill) => void
+  onStartGame: (gameId: string) => void
 }) {
   const daily = useGameStore((s) => s.daily)
   const results = useGameStore((s) => s.results)
@@ -47,7 +49,9 @@ export default function DailyQuests({
   })()
   const curLesson = cur ? lessonByIds(cur.unitId, cur.lessonId) : null
   const hasReview = stats.collected > 0 || stats.due > 0
-  const wd = WEEK_SKILL[new Date().getDay()]
+  const dow = new Date().getDay()
+  const gameDay = dow === 0 || dow === 6 // 周末 = 游戏日
+  const wd = WEEK_SKILL[dow]
 
   type Quest = { id: string; icon: string; label: string; sub: string; done: boolean; run: () => void }
   const quests: Quest[] = [
@@ -69,11 +73,11 @@ export default function DailyQuests({
     },
     {
       id: 'skill',
-      icon: wd.emoji,
-      label: `今日专项·${wd.label}`,
-      sub: '综合小练',
-      done: t.skill > 0,
-      run: () => onStartSkill(wd.skill),
+      icon: gameDay ? '🎮' : wd.emoji,
+      label: gameDay ? '今日专项·游戏日' : `今日专项·${wd.label}`,
+      sub: gameDay ? '竞技场任意一局' : '综合小练',
+      done: t.skill > 0, // 竞技场也计入 skill,玩一局即完成
+      run: gameDay ? () => onStartGame('blitz') : () => onStartSkill(wd.skill),
     },
   ]
   const doneCount = quests.filter((q) => q.done).length

@@ -208,6 +208,7 @@ export default function App() {
                 onStartMain={startLesson}
                 onStartReview={startReview}
                 onStartSkill={startSkill}
+                onStartGame={startGame}
               />
             </div>
             <div className="flex flex-1 flex-col justify-center">

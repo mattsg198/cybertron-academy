@@ -4,6 +4,8 @@ import { useGameStore } from '../../store/useGameStore'
 import { ARCADE_GAMES } from '../../lib/arcade'
 import { sfx } from '../../lib/sfx'
 import EnergonBlitz from './EnergonBlitz'
+import Firewall from './Firewall'
+import SonicIntercept from './SonicIntercept'
 
 // 竞技场容器:跑某款游戏 → 结算页(分数/最佳/能量/破纪录)。
 export default function Arcade({ gameId, onQuit }: { gameId: string; onQuit: () => void }) {
@@ -74,6 +76,10 @@ export default function Arcade({ gameId, onQuit }: { gameId: string; onQuit: () 
       </button>
       {gameId === 'blitz' ? (
         <EnergonBlitz key={runKey} onEnd={handleEnd} />
+      ) : gameId === 'firewall' ? (
+        <Firewall key={runKey} onEnd={handleEnd} />
+      ) : gameId === 'sonic' ? (
+        <SonicIntercept key={runKey} onEnd={handleEnd} />
       ) : (
         <div className="flex h-full items-center justify-center text-white/60">敬请期待…</div>
       )}
