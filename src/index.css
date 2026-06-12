@@ -44,3 +44,18 @@ button { font-family: inherit; cursor: pointer; }
   50% { box-shadow: 0 0 24px 6px rgba(0, 217, 255, 0.35); }
 }
 .animate-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+/* Arcade falling chips — pure CSS (runs on the compositor, unaffected by
+   the 1s timer re-renders, so it stays smooth). --fall = container height px. */
+@keyframes fall {
+  from { transform: translateY(-48px); }
+  to { transform: translateY(var(--fall, 100%)); }
+}
+.arcade-fall {
+  position: absolute;
+  top: 0;
+  will-change: transform;
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}

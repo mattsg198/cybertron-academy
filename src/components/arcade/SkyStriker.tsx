@@ -180,19 +180,23 @@ export default function SkyStriker({ onEnd }: { onEnd: (score: number, correct: 
 
       <div ref={areaRef} className="relative flex-1 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#05030f] to-[#0a0f2c]">
         {wave.foes.map((foe) => (
-          <motion.button
+          <button
             key={foe.key}
-            initial={{ y: -52 }}
-            animate={{ y: h }}
-            transition={{ duration: wave.dur, delay: foe.delay, ease: 'linear' }}
-            onAnimationComplete={() => foe.isTarget && targetMiss()}
+            onAnimationEnd={() => foe.isTarget && targetMiss()}
             onClick={(e) => tap(foe, e)}
-            style={{ left: `${foe.x}%` }}
-            className="absolute top-0 flex -translate-x-1/2 flex-col items-center active:scale-90"
+            style={
+              {
+                left: `${foe.x}%`,
+                animationDuration: `${wave.dur}s`,
+                animationDelay: `${foe.delay}s`,
+                '--fall': `${h}px`,
+              } as React.CSSProperties
+            }
+            className="arcade-fall flex flex-col items-center active:scale-90"
           >
             <span className="text-3xl">🛸</span>
             <span className="-mt-1 rounded-md bg-rose-500/20 px-2 text-sm font-extrabold text-rose-200">{foe.word}</span>
-          </motion.button>
+          </button>
         ))}
 
         {/* laser beam */}

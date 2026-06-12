@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import { useGameStore } from '../../store/useGameStore'
 import { arcadeWords, pick, shuffle } from '../../lib/arcade'
 import { sfx } from '../../lib/sfx'
@@ -119,18 +118,22 @@ export default function WordRain({ onEnd }: { onEnd: (score: number, correct: nu
       {/* falling area */}
       <div ref={areaRef} className="relative flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
         {round.chips.map((chip) => (
-          <motion.button
+          <button
             key={chip.key}
-            initial={{ y: -44 }}
-            animate={{ y: h }}
-            transition={{ duration: round.dur, delay: chip.delay, ease: 'linear' }}
-            onAnimationComplete={() => chip.isTarget && targetMiss()}
+            onAnimationEnd={() => chip.isTarget && targetMiss()}
             onClick={() => tap(chip)}
-            style={{ left: `${chip.x}%` }}
-            className="absolute top-0 rounded-xl border-2 border-cyber/40 bg-[#0a0f2c] px-3 py-2 text-lg font-extrabold shadow-lg active:scale-90"
+            style={
+              {
+                left: `${chip.x}%`,
+                animationDuration: `${round.dur}s`,
+                animationDelay: `${chip.delay}s`,
+                '--fall': `${h}px`,
+              } as React.CSSProperties
+            }
+            className="arcade-fall rounded-xl border-2 border-cyber/40 bg-[#0a0f2c] px-3 py-2 text-lg font-extrabold shadow-lg active:scale-90"
           >
             {chip.word}
-          </motion.button>
+          </button>
         ))}
       </div>
     </div>
