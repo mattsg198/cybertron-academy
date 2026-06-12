@@ -48,6 +48,15 @@ export const ROBOTS: Robot[] = [
     zh: '钢锁 · 力大无穷',
   },
   {
+    id: 'jazz',
+    name: 'Jazz',
+    faction: 'autobot',
+    emoji: '🏎️',
+    altMode: '🚙',
+    tagline: 'Cool, quick and always in style!',
+    zh: '爵士 · 又酷又灵活',
+  },
+  {
     id: 'megatron',
     name: 'Megatron',
     faction: 'decepticon',
