@@ -34,6 +34,9 @@ export default function SkyStriker({ onEnd }: { onEnd: (score: number, correct: 
   const timeLeftRef = useRef(GAME_SEC)
   const waveRef = useRef<Wave | null>(null)
   const shipXRef = useRef(50)
+  const shipRef = useRef<HTMLDivElement>(null)
+  const keysRef = useRef<Set<string>>(new Set())
+  const rafRef = useRef<number | undefined>(undefined)
 
   const makeWave = (i: number): Wave => {
     resolved.current = false
@@ -56,7 +59,6 @@ export default function SkyStriker({ onEnd }: { onEnd: (score: number, correct: 
   waveRef.current = wave
   const [score, setScore] = useState(0)
   const [combo, setCombo] = useState(0)
-  const [shipX, setShipX] = useState(50)
   const [timeLeft, setTimeLeft] = useState(GAME_SEC)
   const [boom, setBoom] = useState<{ key: number; x: number; y: number } | null>(null)
   const [laser, setLaser] = useState<{ key: number; x: number } | null>(null)
@@ -116,8 +118,9 @@ export default function SkyStriker({ onEnd }: { onEnd: (score: number, correct: 
     resolveHit(foe, rect ? e.clientX - rect.left : 0, rect ? e.clientY - rect.top : 0)
   }
 
-  // —— 键盘:← → 移动,空格发射(命中战机所在列最近的敌机) ——
+  // —— 键盘:← → 按住连续滑动(rAF 驱动,直接改 DOM),空格发射 ——
   useEffect(() => {
+    const SPEED = 95 // %/秒,移动速度(更快)
     const fire = () => {
       const w = waveRef.current
       const rect = areaRef.current?.getBoundingClientRect()
@@ -135,26 +138,42 @@ export default function SkyStriker({ onEnd }: { onEnd: (score: number, correct: 
       }
       if (best) resolveHit(best, (rect.width * best.x) / 100, rect.height * 0.32)
     }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        setShipX((x) => {
-          const n = clamp(x - 7)
-          shipXRef.current = n
-          return n
-        })
-      } else if (e.key === 'ArrowRight') {
-        setShipX((x) => {
-          const n = clamp(x + 7)
-          shipXRef.current = n
-          return n
-        })
+    const keys = keysRef.current
+    const onDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        keys.add(e.key)
+        e.preventDefault()
       } else if (e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault()
-        fire()
+        if (!e.repeat) fire()
       }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const onUp = (e: KeyboardEvent) => keys.delete(e.key)
+    window.addEventListener('keydown', onDown)
+    window.addEventListener('keyup', onUp)
+
+    // 移动循环:按住时每帧推进,直接写 DOM(不触发 React 重渲染 → 丝滑)
+    let last = performance.now()
+    const loop = (t: number) => {
+      const dt = Math.min(0.05, (t - last) / 1000)
+      last = t
+      let dx = 0
+      if (keys.has('ArrowLeft')) dx -= 1
+      if (keys.has('ArrowRight')) dx += 1
+      if (dx !== 0) {
+        shipXRef.current = clamp(shipXRef.current + dx * SPEED * dt)
+        if (shipRef.current) shipRef.current.style.left = `${shipXRef.current}%`
+      }
+      rafRef.current = requestAnimationFrame(loop)
+    }
+    if (shipRef.current) shipRef.current.style.left = `${shipXRef.current}%`
+    rafRef.current = requestAnimationFrame(loop)
+
+    return () => {
+      window.removeEventListener('keydown', onDown)
+      window.removeEventListener('keyup', onUp)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -229,14 +248,10 @@ export default function SkyStriker({ onEnd }: { onEnd: (score: number, correct: 
           )}
         </AnimatePresence>
 
-        {/* player ship */}
-        <motion.div
-          animate={{ left: `${shipX}%` }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          className="pointer-events-none absolute bottom-1 -translate-x-1/2 text-4xl"
-        >
+        {/* player ship — left driven directly by the rAF loop (no re-render) */}
+        <div ref={shipRef} className="pointer-events-none absolute bottom-1 -translate-x-1/2 text-4xl">
           🚀
-        </motion.div>
+        </div>
       </div>
     </div>
   )
