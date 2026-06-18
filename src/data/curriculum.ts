@@ -6,6 +6,8 @@ import { freeTime } from './sectors/freeTime'
 import { rewind } from './sectors/rewind'
 import { future } from './sectors/future'
 import { compare } from './sectors/compare'
+import { modals } from './sectors/modals'
+import { perfect } from './sectors/perfect'
 import { ketMock } from './sectors/ketMock'
 
 // ============================================================
@@ -16,7 +18,7 @@ import { ketMock } from './sectors/ketMock'
 // Authoring guide: src/data/README.md
 // ============================================================
 
-export const CURRICULUM: Unit[] = [dailyDrive, energonMarket, sectorMap, freeTime, rewind, future, compare, ketMock]
+export const CURRICULUM: Unit[] = [dailyDrive, energonMarket, sectorMap, freeTime, rewind, future, compare, modals, perfect, ketMock]
 
 export const unitById = (id: string) => CURRICULUM.find((u) => u.id === id)
 
@@ -29,6 +31,8 @@ const LESSON_GOALS: Record<string, string> = {
   u6l1: 'was/were · 过去时间词', u6l2: '规则过去式 -ed', u6l3: '不规则过去式', u6l4: "did/didn't 疑问否定", u6l5: '过去时综合·上周末',
   u7l1: 'be going to · 将来时间词', u7l2: 'be going to 计划', u7l3: 'will 预测/决定', u7l4: "will/won't 疑问否定", u7l5: '将来时综合·下个任务',
   u8l1: '比较级 -er than', u8l2: 'more + 长形容词', u8l3: '最高级 the -est/most', u8l4: 'good/better/best · as…as', u8l5: '比较综合·力量榜',
+  u9l1: 'must / mustn’t', u9l2: 'have to / has to', u9l3: 'should 建议', u9l4: 'can / could 请求·可能', u9l5: '情态综合·学院守则',
+  u10l1: 'have/has + 过去分词', u10l2: 'ever / never', u10l3: 'just / already', u10l4: '常见过去分词', u10l5: '完成时综合·成就',
   u5l1: 'KET 综合模考',
 }
 export const goalOf = (lessonId: string): string => LESSON_GOALS[lessonId] ?? ''
