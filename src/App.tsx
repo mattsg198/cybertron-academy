@@ -205,10 +205,10 @@ export default function App() {
     <div className="flex h-dvh flex-col">
       <TopBar onOpenCollection={() => setTab('garage')} />
 
-      <main className="flex flex-1 flex-col overflow-hidden pb-20">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden pb-20">
         {tab === 'map' && (
-          <div className="flex flex-1 flex-col">
-            <div className="space-y-2 px-4 pt-2">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 space-y-2 px-4 pt-2">
               <InstallPrompt />
               <InspectorBubble onOpenArcade={() => setTab('arcade')} />
               <CheckInCard />
@@ -219,7 +219,7 @@ export default function App() {
                 onStartGame={startGame}
               />
             </div>
-            <div className="flex flex-1 flex-col justify-center">
+            <div className="min-h-0 flex-1">
               <LevelMap onStart={startLesson} />
             </div>
           </div>

@@ -22,8 +22,8 @@ type Stop =
 // Serpentine (snake) layout — vertical scroll. Boss/exam/prize stops force a
 // row turn, so they land at the bends (corners) of the path.
 const PAD = 96 // left/right padding
-const ROW_H = 156 // vertical spacing between rows
-const TOP = 96 // top padding (room for sector label / boss badge)
+const ROW_H = 138 // vertical spacing between rows (compact)
+const TOP = 80 // top padding (room for sector label / boss badge)
 const colsFor = (w: number) => (w >= 960 ? 5 : w >= 680 ? 4 : 3)
 
 export default function LevelMap({
@@ -117,14 +117,19 @@ export default function LevelMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId, cells, width])
 
-  // connector path (straight segments with rounded joins)
+  // connector path — smooth curve: quadratic through each vertex (rounds every
+  // bend, so the snake flows instead of zig-zagging sharply).
   const pathD = useMemo(() => {
     if (!cells.length) return ''
-    let d = ''
-    stops.forEach((_, i) => {
-      const { x, y } = posOf(i)
-      d += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`
-    })
+    const pts = cells.map((_, i) => posOf(i))
+    let d = `M ${pts[0].x} ${pts[0].y}`
+    for (let i = 1; i < pts.length; i++) {
+      const mx = (pts[i - 1].x + pts[i].x) / 2
+      const my = (pts[i - 1].y + pts[i].y) / 2
+      d += ` Q ${pts[i - 1].x} ${pts[i - 1].y} ${mx} ${my}`
+    }
+    const last = pts[pts.length - 1]
+    d += ` L ${last.x} ${last.y}`
     return d
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cells, width])
