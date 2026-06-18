@@ -48,6 +48,15 @@ export const ROBOTS: Robot[] = [
     zh: '钢锁 · 力大无穷',
   },
   {
+    id: 'ironhide',
+    name: 'Ironhide',
+    faction: 'autobot',
+    emoji: '🛡️',
+    altMode: '🛻',
+    tagline: 'Tough as iron, never backs down!',
+    zh: '铁皮 · 坚不可摧',
+  },
+  {
     id: 'arcee',
     name: 'Arcee',
     faction: 'autobot',
