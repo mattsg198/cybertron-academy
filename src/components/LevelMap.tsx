@@ -19,12 +19,12 @@ type Stop =
   | { kind: 'exam'; unit: Unit; lesson: Lesson }
   | { kind: 'prize' }
 
-// Serpentine (snake) layout — vertical scroll. Boss/exam/prize stops force a
-// row turn, so they land at the bends (corners) of the path.
-const PAD = 96 // left/right padding
-const ROW_H = 138 // vertical spacing between rows (compact)
-const TOP = 80 // top padding (room for sector label / boss badge)
-const colsFor = (w: number) => (w >= 960 ? 5 : w >= 680 ? 4 : 3)
+// Tower-defense-style winding road — a smooth vertical sine path; nodes ride the
+// curve and the connector is drawn as a bordered track with a glowing dashed centre.
+const PAD = 84 // keep nodes/labels off the edges
+const STEP_Y = 110 // vertical gap between stops
+const TOP = 72 // top padding
+const WAVE_K = 0.62 // how often the road swings left ↔ right
 
 export default function LevelMap({
   onStart,
@@ -52,8 +52,8 @@ export default function LevelMap({
       window.removeEventListener('orientationchange', measure)
     }
   }, [])
-  const COLS = colsFor(width)
-  const COL_W = (width - PAD * 2) / Math.max(1, COLS - 1)
+  const cx = width / 2
+  const amp = Math.max(70, width / 2 - PAD)
 
   const stops = useMemo<Stop[]>(() => {
     const out: Stop[] = []
@@ -71,31 +71,9 @@ export default function LevelMap({
     return out
   }, [])
 
-  // Assign each stop a (col,row). Turn the row at a column edge, OR right after a
-  // Boss / exam / prize so those dramatic stops sit at a corner.
-  const cells = useMemo(() => {
-    const out: { col: number; row: number }[] = []
-    let col = 0
-    let row = 0
-    let dir = 1
-    stops.forEach((s) => {
-      out.push({ col, row })
-      const corner =
-        s.kind === 'exam' || s.kind === 'prize' || (s.kind === 'lesson' && !!s.lesson.boss)
-      const atEdge = (dir === 1 && col >= COLS - 1) || (dir === -1 && col <= 0)
-      if (corner || atEdge) {
-        row += 1
-        dir = -dir // drop straight down, then snake back
-      } else {
-        col += dir
-      }
-    })
-    return out
-  }, [stops, COLS])
-
-  const rowsCount = (cells[cells.length - 1]?.row ?? 0) + 1
-  const height = TOP + (rowsCount - 1) * ROW_H + 150
-  const posOf = (i: number) => ({ x: PAD + cells[i].col * COL_W, y: TOP + cells[i].row * ROW_H })
+  // Nodes ride a smooth vertical sine — organic, tower-defense-like winding road.
+  const posOf = (i: number) => ({ x: cx + amp * Math.sin(i * WAVE_K), y: TOP + i * STEP_Y })
+  const height = TOP + (stops.length - 1) * STEP_Y + 150
 
   // current = first unlocked, not-yet-passed lesson
   const currentId = useMemo(() => {
@@ -115,39 +93,34 @@ export default function LevelMap({
       el.scrollTo({ top: Math.max(0, posOf(idx).y - el.clientHeight / 2), behavior: 'smooth' })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentId, cells, width])
+  }, [currentId, width])
 
-  // connector path — smooth curve: quadratic through each vertex (rounds every
-  // bend, so the snake flows instead of zig-zagging sharply).
+  // smooth curved track through the points (quadratic through each vertex)
   const pathD = useMemo(() => {
-    if (!cells.length) return ''
-    const pts = cells.map((_, i) => posOf(i))
+    const n = stops.length
+    if (!n) return ''
+    const pts = stops.map((_, i) => posOf(i))
     let d = `M ${pts[0].x} ${pts[0].y}`
-    for (let i = 1; i < pts.length; i++) {
+    for (let i = 1; i < n; i++) {
       const mx = (pts[i - 1].x + pts[i].x) / 2
       const my = (pts[i - 1].y + pts[i].y) / 2
       d += ` Q ${pts[i - 1].x} ${pts[i - 1].y} ${mx} ${my}`
     }
-    const last = pts[pts.length - 1]
+    const last = pts[n - 1]
     d += ` L ${last.x} ${last.y}`
     return d
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cells, width])
+  }, [stops, width])
 
   return (
     <div ref={scroller} className="no-scrollbar relative h-full w-full overflow-y-auto overflow-x-hidden">
       <div className="relative mx-auto" style={{ width, height }}>
-        {/* connector road */}
+        {/* winding track: dark border → road body → soft glow → dashed centre line */}
         <svg className="absolute inset-0" width={width} height={height} fill="none">
-          <path d={pathD} stroke="rgba(255,255,255,0.10)" strokeWidth={24} strokeLinecap="round" strokeLinejoin="round" />
-          <path
-            d={pathD}
-            stroke="rgba(0,217,255,0.35)"
-            strokeWidth={4}
-            strokeDasharray="2 16"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d={pathD} stroke="rgba(4,6,20,0.55)" strokeWidth={44} strokeLinecap="round" strokeLinejoin="round" />
+          <path d={pathD} stroke="#2b356b" strokeWidth={32} strokeLinecap="round" strokeLinejoin="round" />
+          <path d={pathD} stroke="rgba(0,217,255,0.16)" strokeWidth={30} strokeLinecap="round" strokeLinejoin="round" />
+          <path d={pathD} stroke="rgba(0,217,255,0.75)" strokeWidth={3} strokeDasharray="2 18" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
 
         {stops.map((stop, i) => {
