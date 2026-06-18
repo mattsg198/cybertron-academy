@@ -18,6 +18,7 @@ import ParentCenter from './components/ParentCenter'
 import CheckInCard from './components/CheckInCard'
 import DailyQuests from './components/DailyQuests'
 import InspectorBubble from './components/InspectorBubble'
+import InstallPrompt from './components/InstallPrompt'
 import Arcade from './components/arcade/Arcade'
 import ArcadeHub from './components/arcade/ArcadeHub'
 import EyeBreakOverlay, { useEyeBreak } from './components/EyeBreak'
@@ -208,6 +209,7 @@ export default function App() {
         {tab === 'map' && (
           <div className="flex flex-1 flex-col">
             <div className="space-y-2 px-4 pt-2">
+              <InstallPrompt />
               <InspectorBubble onOpenArcade={() => setTab('arcade')} />
               <CheckInCard />
               <DailyQuests

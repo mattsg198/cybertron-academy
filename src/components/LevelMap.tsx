@@ -19,10 +19,12 @@ type Stop =
   | { kind: 'exam'; unit: Unit; lesson: Lesson }
   | { kind: 'prize' }
 
-// path geometry — horizontal is fixed; vertical adapts to viewport height
-// so it also fits phone landscape (short height), not just iPad.
-const SP = 190 // horizontal spacing between stops
-const PAD = 140 // left/right padding
+// Serpentine (snake) layout — vertical scroll. Boss/exam/prize stops force a
+// row turn, so they land at the bends (corners) of the path.
+const PAD = 96 // left/right padding
+const ROW_H = 156 // vertical spacing between rows
+const TOP = 96 // top padding (room for sector label / boss badge)
+const colsFor = (w: number) => (w >= 960 ? 5 : w >= 680 ? 4 : 3)
 
 export default function LevelMap({
   onStart,
@@ -35,21 +37,23 @@ export default function LevelMap({
   const starsFor = useGameStore((s) => s.starsFor)
   const scroller = useRef<HTMLDivElement>(null)
 
-  // Responsive vertical metrics: shrink the map on short (phone-landscape) screens.
-  const [vh, setVh] = useState(typeof window !== 'undefined' ? window.innerHeight : 820)
+  const [width, setWidth] = useState(
+    typeof window !== 'undefined' ? Math.min(window.innerWidth, 1100) : 900,
+  )
   useEffect(() => {
-    const onResize = () => setVh(window.innerHeight)
-    window.addEventListener('resize', onResize)
-    window.addEventListener('orientationchange', onResize)
+    const measure = () => {
+      if (scroller.current) setWidth(scroller.current.clientWidth)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    window.addEventListener('orientationchange', measure)
     return () => {
-      window.removeEventListener('resize', onResize)
-      window.removeEventListener('orientationchange', onResize)
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('orientationchange', measure)
     }
   }, [])
-  const HEIGHT = Math.max(280, Math.min(470, vh - 300)) // room for TopBar + 探长 + check-in + quests + TabBar
-  const BASE_Y = HEIGHT / 2
-  const AMP = Math.round(HEIGHT * 0.14)
-  const posOf = (i: number) => ({ x: PAD + i * SP, y: BASE_Y + AMP * Math.sin(i * 0.85) })
+  const COLS = colsFor(width)
+  const COL_W = (width - PAD * 2) / Math.max(1, COLS - 1)
 
   const stops = useMemo<Stop[]>(() => {
     const out: Stop[] = []
@@ -67,7 +71,31 @@ export default function LevelMap({
     return out
   }, [])
 
-  const width = PAD * 2 + (stops.length - 1) * SP
+  // Assign each stop a (col,row). Turn the row at a column edge, OR right after a
+  // Boss / exam / prize so those dramatic stops sit at a corner.
+  const cells = useMemo(() => {
+    const out: { col: number; row: number }[] = []
+    let col = 0
+    let row = 0
+    let dir = 1
+    stops.forEach((s) => {
+      out.push({ col, row })
+      const corner =
+        s.kind === 'exam' || s.kind === 'prize' || (s.kind === 'lesson' && !!s.lesson.boss)
+      const atEdge = (dir === 1 && col >= COLS - 1) || (dir === -1 && col <= 0)
+      if (corner || atEdge) {
+        row += 1
+        dir = -dir // drop straight down, then snake back
+      } else {
+        col += dir
+      }
+    })
+    return out
+  }, [stops, COLS])
+
+  const rowsCount = (cells[cells.length - 1]?.row ?? 0) + 1
+  const height = TOP + (rowsCount - 1) * ROW_H + 150
+  const posOf = (i: number) => ({ x: PAD + cells[i].col * COL_W, y: TOP + cells[i].row * ROW_H })
 
   // current = first unlocked, not-yet-passed lesson
   const currentId = useMemo(() => {
@@ -77,55 +105,43 @@ export default function LevelMap({
     return null
   }, [results, isUnlocked])
 
-  // centre the current stop on mount / when it changes
+  // centre the current stop vertically on mount / when it changes
   useEffect(() => {
     const idx = stops.findIndex(
       (s) => (s.kind === 'lesson' || s.kind === 'exam') && s.lesson.id === currentId,
     )
     const el = scroller.current
     if (el && idx >= 0) {
-      el.scrollTo({ left: Math.max(0, posOf(idx).x - el.clientWidth / 2), behavior: 'smooth' })
+      el.scrollTo({ top: Math.max(0, posOf(idx).y - el.clientHeight / 2), behavior: 'smooth' })
     }
-  }, [currentId, stops])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentId, cells, width])
 
-  // smooth connector path through the stops
+  // connector path (straight segments with rounded joins)
   const pathD = useMemo(() => {
+    if (!cells.length) return ''
     let d = ''
     stops.forEach((_, i) => {
       const { x, y } = posOf(i)
-      if (i === 0) d = `M ${x} ${y}`
-      else {
-        const p = posOf(i - 1)
-        d += ` Q ${p.x} ${p.y} ${(p.x + x) / 2} ${(p.y + y) / 2}`
-      }
+      d += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`
     })
-    const last = posOf(stops.length - 1)
-    d += ` T ${last.x} ${last.y}`
     return d
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stops, HEIGHT])
+  }, [cells, width])
 
   return (
-    <div
-      ref={scroller}
-      className="no-scrollbar relative w-full overflow-x-auto overflow-y-hidden"
-      style={{ height: HEIGHT }}
-    >
-      <div className="relative" style={{ width, height: HEIGHT }}>
+    <div ref={scroller} className="no-scrollbar relative h-full w-full overflow-y-auto overflow-x-hidden">
+      <div className="relative mx-auto" style={{ width, height }}>
         {/* connector road */}
-        <svg
-          className="absolute inset-0"
-          width={width}
-          height={HEIGHT}
-          fill="none"
-        >
-          <path d={pathD} stroke="rgba(255,255,255,0.10)" strokeWidth={26} strokeLinecap="round" />
+        <svg className="absolute inset-0" width={width} height={height} fill="none">
+          <path d={pathD} stroke="rgba(255,255,255,0.10)" strokeWidth={24} strokeLinecap="round" strokeLinejoin="round" />
           <path
             d={pathD}
             stroke="rgba(0,217,255,0.35)"
             strokeWidth={4}
             strokeDasharray="2 16"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
 
