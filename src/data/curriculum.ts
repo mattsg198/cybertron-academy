@@ -4,6 +4,7 @@ import { energonMarket } from './sectors/energonMarket'
 import { sectorMap } from './sectors/sectorMap'
 import { freeTime } from './sectors/freeTime'
 import { rewind } from './sectors/rewind'
+import { future } from './sectors/future'
 import { ketMock } from './sectors/ketMock'
 
 // ============================================================
@@ -14,7 +15,7 @@ import { ketMock } from './sectors/ketMock'
 // Authoring guide: src/data/README.md
 // ============================================================
 
-export const CURRICULUM: Unit[] = [dailyDrive, energonMarket, sectorMap, freeTime, rewind, ketMock]
+export const CURRICULUM: Unit[] = [dailyDrive, energonMarket, sectorMap, freeTime, rewind, future, ketMock]
 
 export const unitById = (id: string) => CURRICULUM.find((u) => u.id === id)
 
@@ -25,6 +26,7 @@ const LESSON_GOALS: Record<string, string> = {
   u3l1: '城市地点词', u3l2: 'there is/are', u3l3: '问路·方向', u3l4: '方位介词', u3l5: '交通 + 问路',
   u4l1: '爱好词', u4l2: '现在进行时', u4l3: '一起玩·句型', u4l4: 'can/can’t 能力', u4l5: '进行时疑问句',
   u6l1: 'was/were · 过去时间词', u6l2: '规则过去式 -ed', u6l3: '不规则过去式', u6l4: "did/didn't 疑问否定", u6l5: '过去时综合·上周末',
+  u7l1: 'be going to · 将来时间词', u7l2: 'be going to 计划', u7l3: 'will 预测/决定', u7l4: "will/won't 疑问否定", u7l5: '将来时综合·下个任务',
   u5l1: 'KET 综合模考',
 }
 export const goalOf = (lessonId: string): string => LESSON_GOALS[lessonId] ?? ''
