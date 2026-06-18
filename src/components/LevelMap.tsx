@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CURRICULUM, lessonOrder, goalOf } from '../data/curriculum'
+import { CURRICULUM, lessonOrder } from '../data/curriculum'
 import { robotById } from '../data/robots'
 import { useGameStore } from '../store/useGameStore'
 import RobotAvatar from './RobotAvatar'
@@ -19,12 +19,12 @@ type Stop =
   | { kind: 'exam'; unit: Unit; lesson: Lesson }
   | { kind: 'prize' }
 
-// Tower-defense-style winding road — a smooth vertical sine path; nodes ride the
-// curve and the connector is drawn as a bordered track with a glowing dashed centre.
-const PAD = 84 // keep nodes/labels off the edges
-const STEP_Y = 110 // vertical gap between stops
-const TOP = 72 // top padding
-const WAVE_K = 0.62 // how often the road swings left ↔ right
+// Tower-defense-style winding road — multi-column serpentine (wide, many nodes
+// per row), connector drawn as a bordered track with smooth U-turns + dashed centre.
+const PAD = 72 // keep nodes off the edges
+const ROW_H = 116 // vertical gap between rows
+const TOP = 84 // top padding (room for sector banner)
+const colsFor = (w: number) => (w >= 1040 ? 6 : w >= 820 ? 5 : w >= 560 ? 4 : 3)
 
 export default function LevelMap({
   onStart,
@@ -52,8 +52,8 @@ export default function LevelMap({
       window.removeEventListener('orientationchange', measure)
     }
   }, [])
-  const cx = width / 2
-  const amp = Math.max(70, width / 2 - PAD)
+  const COLS = colsFor(width)
+  const COL_W = (width - PAD * 2) / Math.max(1, COLS - 1)
 
   const stops = useMemo<Stop[]>(() => {
     const out: Stop[] = []
@@ -71,9 +71,28 @@ export default function LevelMap({
     return out
   }, [])
 
-  // Nodes ride a smooth vertical sine — organic, tower-defense-like winding road.
-  const posOf = (i: number) => ({ x: cx + amp * Math.sin(i * WAVE_K), y: TOP + i * STEP_Y })
-  const height = TOP + (stops.length - 1) * STEP_Y + 150
+  // Serpentine grid: each row fills left→right then right→left (wide, many nodes/row).
+  const cells = useMemo(() => {
+    const out: { col: number; row: number }[] = []
+    let col = 0
+    let row = 0
+    let dir = 1
+    stops.forEach(() => {
+      out.push({ col, row })
+      const atEdge = (dir === 1 && col >= COLS - 1) || (dir === -1 && col <= 0)
+      if (atEdge) {
+        row += 1
+        dir = -dir // drop down, then snake back the other way
+      } else {
+        col += dir
+      }
+    })
+    return out
+  }, [stops, COLS])
+
+  const rowsCount = (cells[cells.length - 1]?.row ?? 0) + 1
+  const height = TOP + (rowsCount - 1) * ROW_H + 120
+  const posOf = (i: number) => ({ x: PAD + cells[i].col * COL_W, y: TOP + cells[i].row * ROW_H })
 
   // current = first unlocked, not-yet-passed lesson
   const currentId = useMemo(() => {
@@ -93,7 +112,7 @@ export default function LevelMap({
       el.scrollTo({ top: Math.max(0, posOf(idx).y - el.clientHeight / 2), behavior: 'smooth' })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentId, width])
+  }, [currentId, cells, width])
 
   // smooth curved track through the points (quadratic through each vertex)
   const pathD = useMemo(() => {
@@ -110,7 +129,7 @@ export default function LevelMap({
     d += ` L ${last.x} ${last.y}`
     return d
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stops, width])
+  }, [cells, width])
 
   return (
     <div ref={scroller} className="no-scrollbar relative h-full w-full overflow-y-auto overflow-x-hidden">
@@ -252,16 +271,7 @@ function LessonStop({
           lesson.emoji
         )}
       </button>
-      {isBoss && unlocked && (
-        <div className="mt-1 text-base font-black text-[#ff8fa3]">{lesson.boss!.name}</div>
-      )}
-      {done ? <Stars n={stars} /> : !isBoss && <div className="mt-1 h-5" />}
-      {unlocked && !isBoss && (
-        <div className="w-36 text-center leading-snug">
-          <div className="truncate text-base font-black text-white/90">{lesson.title}</div>
-          <div className="truncate text-xs text-white/55">{goalOf(lesson.id)}</div>
-        </div>
-      )}
+      {done && <Stars n={stars} />}
     </div>
   )
 }
