@@ -134,8 +134,14 @@ export default function LevelMap({
   return (
     <div ref={scroller} className="no-scrollbar relative h-full w-full overflow-y-auto overflow-x-hidden">
       <div className="relative mx-auto" style={{ width, height }}>
-        {/* winding track: dark border → road body → soft glow → dashed centre line */}
+        {/* faint cyber-grid backdrop + winding track */}
         <svg className="absolute inset-0" width={width} height={height} fill="none">
+          <defs>
+            <pattern id="cybergrid" width="46" height="46" patternUnits="userSpaceOnUse">
+              <path d="M46 0 H0 V46" fill="none" stroke="rgba(120,160,255,0.06)" strokeWidth="1" />
+            </pattern>
+          </defs>
+          <rect x={0} y={0} width={width} height={height} fill="url(#cybergrid)" />
           <path d={pathD} stroke="rgba(4,6,20,0.55)" strokeWidth={44} strokeLinecap="round" strokeLinejoin="round" />
           <path d={pathD} stroke="#2b356b" strokeWidth={32} strokeLinecap="round" strokeLinejoin="round" />
           <path d={pathD} stroke="rgba(0,217,255,0.16)" strokeWidth={30} strokeLinecap="round" strokeLinejoin="round" />
@@ -216,14 +222,15 @@ function LessonStop({
   const accent = isBoss ? '#ff4d6d' : mastered ? '#ffcc33' : unit.color
   return (
     <div className="flex flex-col items-center">
-      {/* sector label above the first node of each sector */}
+      {/* sector banner above the first node of each sector */}
       {first && (
         <div
-          className="absolute -top-16 left-1/2 w-44 -translate-x-1/2 rounded-xl px-3 py-2 text-center"
-          style={{ background: `${unit.color}22`, border: `1px solid ${unit.color}66` }}
+          className="absolute -top-14 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5"
+          style={{ background: '#0b1230', border: `1.5px solid ${unit.color}`, boxShadow: `0 0 12px ${unit.color}55` }}
         >
-          <div className="text-sm font-black leading-tight">{unit.name}</div>
-          <div className="text-[11px] text-white/55">{unit.zh}</div>
+          <span className="h-2.5 w-2.5 rounded-full" style={{ background: unit.color }} />
+          <span className="text-sm font-black" style={{ color: unit.color }}>{unit.name}</span>
+          <span className="text-[11px] text-white/45">{unit.zh}</span>
         </div>
       )}
 
