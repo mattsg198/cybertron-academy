@@ -114,22 +114,34 @@ export default function LevelMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId, cells, width])
 
-  // smooth curved track through the points (quadratic through each vertex)
-  const pathD = useMemo(() => {
-    const n = stops.length
-    if (!n) return ''
-    const pts = stops.map((_, i) => posOf(i))
-    let d = `M ${pts[0].x} ${pts[0].y}`
-    for (let i = 1; i < n; i++) {
-      const mx = (pts[i - 1].x + pts[i].x) / 2
-      const my = (pts[i - 1].y + pts[i].y) / 2
-      d += ` Q ${pts[i - 1].x} ${pts[i - 1].y} ${mx} ${my}`
+  // smooth-track builder (quadratic through each vertex), 0..to
+  const buildPath = (to: number) => {
+    if (to <= 0) {
+      const p = posOf(0)
+      return `M ${p.x} ${p.y}`
     }
-    const last = pts[n - 1]
+    const p0 = posOf(0)
+    let d = `M ${p0.x} ${p0.y}`
+    for (let i = 1; i <= to; i++) {
+      const q = posOf(i - 1)
+      const p = posOf(i)
+      d += ` Q ${q.x} ${q.y} ${(q.x + p.x) / 2} ${(q.y + p.y) / 2}`
+    }
+    const last = posOf(to)
     d += ` L ${last.x} ${last.y}`
     return d
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cells, width])
+  }
+  // progress frontier = the current (first unlocked, not-done) stop
+  const currentIdx = useMemo(() => {
+    const i = stops.findIndex(
+      (s) => (s.kind === 'lesson' || s.kind === 'exam') && s.lesson.id === currentId,
+    )
+    return i < 0 ? stops.length - 1 : i
+  }, [stops, currentId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fullPath = useMemo(() => buildPath(stops.length - 1), [cells, width])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const donePath = useMemo(() => buildPath(currentIdx), [cells, width, currentIdx])
 
   return (
     <div ref={scroller} className="no-scrollbar relative h-full w-full overflow-y-auto overflow-x-hidden">
@@ -142,10 +154,16 @@ export default function LevelMap({
             </pattern>
           </defs>
           <rect x={0} y={0} width={width} height={height} fill="url(#cybergrid)" />
-          <path d={pathD} stroke="rgba(4,6,20,0.55)" strokeWidth={44} strokeLinecap="round" strokeLinejoin="round" />
-          <path d={pathD} stroke="#2b356b" strokeWidth={32} strokeLinecap="round" strokeLinejoin="round" />
-          <path d={pathD} stroke="rgba(0,217,255,0.16)" strokeWidth={30} strokeLinecap="round" strokeLinejoin="round" />
-          <path d={pathD} stroke="rgba(0,217,255,0.75)" strokeWidth={3} strokeDasharray="2 18" strokeLinecap="round" strokeLinejoin="round" />
+          {/* outer border (full) */}
+          <path d={fullPath} stroke="rgba(4,6,20,0.55)" strokeWidth={44} strokeLinecap="round" strokeLinejoin="round" />
+          {/* dim/locked road (full) */}
+          <path d={fullPath} stroke="#222a4e" strokeWidth={30} strokeLinecap="round" strokeLinejoin="round" />
+          {/* completed road — lit gold (up to current) */}
+          <path d={donePath} stroke="#c79a32" strokeWidth={30} strokeLinecap="round" strokeLinejoin="round" />
+          <path d={donePath} stroke="rgba(255,211,78,0.25)" strokeWidth={30} strokeLinecap="round" strokeLinejoin="round" />
+          {/* centre dashes: faint over locked, bright gold over completed */}
+          <path d={fullPath} stroke="rgba(130,150,210,0.22)" strokeWidth={2.5} strokeDasharray="2 18" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={donePath} stroke="rgba(255,226,150,0.95)" strokeWidth={2.5} strokeDasharray="2 18" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
 
         {stops.map((stop, i) => {
@@ -219,7 +237,6 @@ function LessonStop({
   const done = stars > 0
   const isBoss = !!lesson.boss
   const mastered = !isBoss && stars >= 3 // 3★ = 已精通（金）
-  const accent = isBoss ? '#ff4d6d' : mastered ? '#ffcc33' : unit.color
   return (
     <div className="flex flex-col items-center">
       {/* sector banner above the first node of each sector */}
@@ -250,34 +267,40 @@ function LessonStop({
       )}
       {mastered && <div className="absolute -top-7 text-xl">👑</div>}
 
-      <button
-        onClick={unlocked ? onStart : undefined}
-        disabled={!unlocked}
-        className={`flex items-center justify-center rounded-full border-4 transition ${
-          isBoss ? 'h-24 w-24 text-4xl' : 'h-20 w-20 text-3xl'
-        } ${current && !isBoss ? 'animate-glow' : ''} ${
-          unlocked
-            ? 'active:scale-95'
-            : 'cursor-not-allowed border-white/10 bg-white/[0.03] opacity-50'
-        }`}
-        style={
-          unlocked
-            ? {
-                background: done ? accent : isBoss ? 'rgba(255,77,109,0.18)' : 'rgba(255,255,255,0.08)',
-                borderColor: current ? '#00d9ff' : done || isBoss ? accent : 'rgba(255,255,255,0.25)',
-                boxShadow: isBoss ? '0 0 14px rgba(255,77,109,0.45)' : undefined,
-              }
-            : undefined
-        }
-      >
-        {!unlocked ? (
-          '🔒'
-        ) : isBoss ? (
-          <AssetImage slot={lesson.boss!.image} emoji={lesson.emoji} sizeClass="text-4xl" />
-        ) : (
-          lesson.emoji
-        )}
-      </button>
+      {isBoss ? (
+        <button
+          onClick={unlocked ? onStart : undefined}
+          disabled={!unlocked}
+          className={`flex h-24 w-24 items-center justify-center rounded-full border-4 text-4xl transition ${
+            unlocked ? 'active:scale-95' : 'cursor-not-allowed border-white/10 bg-white/[0.03] opacity-50'
+          }`}
+          style={
+            unlocked
+              ? { background: 'rgba(255,77,109,0.18)', borderColor: '#ff4d6d', boxShadow: '0 0 14px rgba(255,77,109,0.5)' }
+              : undefined
+          }
+        >
+          {unlocked ? <AssetImage slot={lesson.boss!.image} emoji={lesson.emoji} sizeClass="text-4xl" /> : '🔒'}
+        </button>
+      ) : !unlocked ? (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/10 bg-white/[0.03] text-2xl opacity-50">
+          🔒
+        </div>
+      ) : (
+        <button
+          onClick={onStart}
+          className={`flex h-16 w-16 items-center justify-center rounded-full transition active:scale-95 ${current ? 'animate-glow' : ''}`}
+          style={{
+            boxShadow: mastered
+              ? '0 0 16px rgba(255,204,78,0.8)'
+              : done
+                ? `0 0 10px ${unit.color}66`
+                : undefined,
+          }}
+        >
+          <AssetImage slot={`minions/${unit.id}.png`} emoji={lesson.emoji} sizeClass="text-5xl" />
+        </button>
+      )}
       {done && <Stars n={stars} />}
     </div>
   )
