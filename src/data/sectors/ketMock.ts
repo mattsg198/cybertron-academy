@@ -93,6 +93,75 @@ export const ketMock: Unit = {
           answer: 'is crying',
           zh: 'now → 现在进行时',
         },
+        // —— 过去时 ——
+        {
+          type: 'fillBlank',
+          before: 'Yesterday we ',
+          after: ' to the park.',
+          options: ['go', 'went', 'going'],
+          answer: 'went',
+          zh: '过去时 go → went',
+        },
+        {
+          type: 'fillBlank',
+          before: 'She ',
+          after: ' her homework last night.',
+          options: ['finish', 'finished', 'finishes'],
+          answer: 'finished',
+          zh: '规则过去式 -ed',
+        },
+        // —— 将来时 ——
+        {
+          type: 'fillBlank',
+          before: 'Tomorrow I am ',
+          after: ' to visit my aunt.',
+          options: ['going', 'go', 'went'],
+          answer: 'going',
+          zh: 'be going to + 原形',
+        },
+        {
+          type: 'fillBlank',
+          before: "Don't worry, I ",
+          after: ' help you.',
+          options: ['will', 'am', 'did'],
+          answer: 'will',
+          zh: 'will 表示决定',
+        },
+        // —— 情态动词 ——
+        {
+          type: 'fillBlank',
+          before: 'You ',
+          after: ' wear a seatbelt in the car.',
+          options: ['must', 'musts', 'are'],
+          answer: 'must',
+          zh: 'must + 动词原形',
+        },
+        // —— 现在完成时 ——
+        {
+          type: 'fillBlank',
+          before: 'I have ',
+          after: ' my homework.',
+          options: ['do', 'did', 'done'],
+          answer: 'done',
+          zh: 'have + 过去分词 done',
+        },
+        {
+          type: 'fillBlank',
+          before: 'Have you ',
+          after: ' been to London?',
+          options: ['ever', 'never', 'just'],
+          answer: 'ever',
+          zh: '疑问句用 ever',
+        },
+        // —— 最高级 ——
+        {
+          type: 'fillBlank',
+          before: 'Optimus is the ',
+          after: ' Autobot of all.',
+          options: ['tall', 'taller', 'tallest'],
+          answer: 'tallest',
+          zh: '最高级 the tallest',
+        },
         // —— 语序 ——
         {
           type: 'sentenceBuild',
