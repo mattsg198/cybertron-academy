@@ -313,7 +313,7 @@ export const freeTime: Unit = {
       ],
     },
     {
-      // 小关底 Boss：天猫 Skywarp — 综合复习现在进行时
+      // 小关底 Boss：闹翻天 Skywarp — 综合复习现在进行时
       id: 'u4l6',
       title: 'Sector Boss: Skywarp',
       emoji: '🌀',
@@ -325,9 +325,9 @@ export const freeTime: Unit = {
       boss: {
         name: 'Skywarp',
         emoji: '🌀',
-        zh: '天猫',
+        zh: '闹翻天',
         image: 'bosses/skywarp.png',
-        intro: '天猫会瞬间移动，突然杀进了汽车人的训练场！想锁定他的位置，就得用现在进行时说清楚"谁正在做什么"。眼疾手快，跟上他的速度！',
+        intro: '闹翻天会瞬间移动，突然杀进了汽车人的训练场！想锁定他的位置，就得用现在进行时说清楚"谁正在做什么"。眼疾手快，跟上他的速度！',
       },
       exercises: [
         {

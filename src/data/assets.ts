@@ -36,7 +36,7 @@ export const BOSS_ASSETS: BrandedAsset[] = [
   { key: 'soundwave', slot: 'bosses/soundwave.png', role: 'Sector 1 Boss:声波', placeholder: '🎧', size: '512×512 PNG 透明', kind: 'boss' },
   { key: 'starscream', slot: 'bosses/starscream.png', role: 'Sector 2 Boss:红蜘蛛', placeholder: '✈️', size: '512×512 PNG 透明', kind: 'boss' },
   { key: 'shockwave', slot: 'bosses/shockwave.png', role: 'Sector 3 Boss:震荡波', placeholder: '👁️', size: '512×512 PNG 透明', kind: 'boss' },
-  { key: 'skywarp', slot: 'bosses/skywarp.png', role: 'Sector 4 Boss:天猫', placeholder: '🌀', size: '512×512 PNG 透明', kind: 'boss' },
+  { key: 'skywarp', slot: 'bosses/skywarp.png', role: 'Sector 4 Boss:闹翻天', placeholder: '🌀', size: '512×512 PNG 透明', kind: 'boss' },
   { key: 'megatron', slot: 'bosses/megatron.png', role: 'KET 大关卡 Boss:威震天', placeholder: '👾', size: '512×512 PNG 透明', kind: 'boss' },
 ]
 
