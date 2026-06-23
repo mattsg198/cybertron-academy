@@ -24,6 +24,7 @@ import { homePacks } from './wordpacks/home'
 import { placesPacks } from './wordpacks/places'
 import { wordsPacks } from './wordpacks/words'
 import { schoolPacks } from './wordpacks/school'
+import { morePacks } from './wordpacks/more'
 
 export const WORD_PACKS: WordPack[] = [
   ...foodPacks,
@@ -33,6 +34,7 @@ export const WORD_PACKS: WordPack[] = [
   ...placesPacks,
   ...wordsPacks,
   ...schoolPacks,
+  ...morePacks,
 ]
 
 export const packById = (id: string) => WORD_PACKS.find((p) => p.id === id)

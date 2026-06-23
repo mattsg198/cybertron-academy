@@ -93,6 +93,15 @@ export const ROBOTS: Robot[] = [
     zh: '爵士 · 又酷又灵活',
   },
   {
+    id: 'ultramagnus',
+    name: 'Ultra Magnus',
+    faction: 'autobot',
+    emoji: '🛡️',
+    altMode: '🚛',
+    tagline: 'City commander — earned by passing the final exam!',
+    zh: '通天晓 · 终考奖励',
+  },
+  {
     id: 'megatron',
     name: 'Megatron',
     faction: 'decepticon',

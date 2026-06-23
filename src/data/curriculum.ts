@@ -9,6 +9,7 @@ import { compare } from './sectors/compare'
 import { modals } from './sectors/modals'
 import { perfect } from './sectors/perfect'
 import { ketMock } from './sectors/ketMock'
+import { ketMock2 } from './sectors/ketMock2'
 
 // ============================================================
 // CURRICULUM index — KET (Cambridge A2 Key) aligned.
@@ -18,7 +19,7 @@ import { ketMock } from './sectors/ketMock'
 // Authoring guide: src/data/README.md
 // ============================================================
 
-export const CURRICULUM: Unit[] = [dailyDrive, energonMarket, sectorMap, freeTime, rewind, future, compare, modals, perfect, ketMock]
+export const CURRICULUM: Unit[] = [dailyDrive, energonMarket, sectorMap, freeTime, rewind, future, compare, modals, perfect, ketMock, ketMock2]
 
 export const unitById = (id: string) => CURRICULUM.find((u) => u.id === id)
 
@@ -34,6 +35,7 @@ const LESSON_GOALS: Record<string, string> = {
   u9l1: 'must / mustn’t', u9l2: 'have to / has to', u9l3: 'should 建议', u9l4: 'can / could 请求·可能', u9l5: '情态综合·学院守则',
   u10l1: 'have/has + 过去分词', u10l2: 'ever / never', u10l3: 'just / already', u10l4: '常见过去分词', u10l5: '完成时综合·成就',
   u5l1: 'KET 综合模考',
+  u11l1: 'KET 终考·综合冲刺',
 }
 export const goalOf = (lessonId: string): string => LESSON_GOALS[lessonId] ?? ''
 
