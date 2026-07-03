@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/cybertron-academy/sw.js', { scope: '/cybertron-academy/' })})}
